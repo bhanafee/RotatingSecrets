@@ -12,6 +12,13 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.Instant;
 
+/**
+ * Demonstrates database connectivity by polling the database on scheduled intervals.
+ *
+ * <p>Runs two polling threads that check out connections from the pool, execute
+ * a simple query, and print results to stdout. This exercises the connection pool
+ * and credential rotation behavior.</p>
+ */
 @Service
 public class DatabasePollingService {
 
@@ -20,15 +27,26 @@ public class DatabasePollingService {
 
     private final DataSource dataSource;
 
+    /**
+     * Creates the polling service with the given DataSource.
+     *
+     * @param dataSource the connection pool to use for queries
+     */
     public DatabasePollingService(DataSource dataSource) {
         this.dataSource = dataSource;
     }
 
+    /**
+     * Polls the database every 5 seconds.
+     */
     @Scheduled(fixedRate = 5000)
     public void pollEveryFiveSeconds() {
         executeQuery("5-second-poller");
     }
 
+    /**
+     * Polls the database every 3 seconds.
+     */
     @Scheduled(fixedRate = 3000)
     public void pollEveryThreeSeconds() {
         executeQuery("3-second-poller");

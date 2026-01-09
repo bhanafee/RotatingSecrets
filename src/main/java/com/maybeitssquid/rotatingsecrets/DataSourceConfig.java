@@ -8,9 +8,24 @@ import org.springframework.context.annotation.Configuration;
 
 import javax.sql.DataSource;
 
+/**
+ * Configures the HikariCP connection pool with dynamic credential support.
+ *
+ * <p>Uses {@link KubernetesCredentialsProvider} to supply fresh credentials
+ * for each new physical connection, enabling seamless password rotation.</p>
+ */
 @Configuration
 public class DataSourceConfig {
 
+    /**
+     * Creates a HikariCP DataSource configured with dynamic credentials.
+     *
+     * @param credentialsProvider provides credentials from Kubernetes secrets
+     * @param minPoolSize         minimum number of idle connections in the pool
+     * @param maxPoolSize         maximum number of connections in the pool
+     * @param connectionTimeoutMs maximum time to wait for a connection from the pool
+     * @return configured HikariCP DataSource
+     */
     @Bean
     public DataSource dataSource(
             KubernetesCredentialsProvider credentialsProvider,

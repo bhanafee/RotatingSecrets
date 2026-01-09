@@ -2,6 +2,13 @@ package com.maybeitssquid.rotatingsecrets;
 
 import java.time.Instant;
 
+/**
+ * Result of a database poll operation.
+ *
+ * @param threadName   name identifying which polling thread executed the query
+ * @param timestamp    instant when the query was executed (client-side)
+ * @param databaseTime current time as reported by the database server
+ */
 public record QueryResult(
         String threadName,
         Instant timestamp,
