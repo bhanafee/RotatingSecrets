@@ -14,9 +14,9 @@ public class DataSourceConfig {
     @Bean
     public DataSource dataSource(
             KubernetesCredentialsProvider credentialsProvider,
-            @Value("${pool.min-size:1}") int minPoolSize,
-            @Value("${pool.max-size:3}") int maxPoolSize,
-            @Value("${pool.connection-timeout-ms:5000}") long connectionTimeoutMs) {
+            @Value("${pool.min-size}") int minPoolSize,
+            @Value("${pool.max-size}") int maxPoolSize,
+            @Value("${pool.connection-timeout-ms}") long connectionTimeoutMs) {
 
         HikariConfig config = new HikariConfig();
         config.setJdbcUrl(credentialsProvider.getJdbcUrl());
