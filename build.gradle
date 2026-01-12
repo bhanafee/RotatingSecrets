@@ -27,14 +27,9 @@ dependencies {
     implementation 'org.springframework.cloud:spring-cloud-starter-circuitbreaker-resilience4j'
     implementation 'org.springframework.cloud:spring-cloud-starter-vault-config'
 
-    // Include the JDBC driver(s) for your target database(s).
-    // See: https://github.com/brettwooldridge/HikariCP#popular-datasource-class-names
-    runtimeOnly 'org.postgresql:postgresql'                   // PostgreSQL
-    // runtimeOnly 'com.oracle.database.jdbc:ojdbc11'         // Oracle
-    // runtimeOnly 'com.mysql:mysql-connector-j'              // MySQL
-    // runtimeOnly 'org.mariadb.jdbc:mariadb-java-client'     // MariaDB
-    // runtimeOnly 'com.microsoft.sqlserver:mssql-jdbc'       // SQL Server
-    // runtimeOnly 'com.ibm.db2:jcc'                          // IBM DB2
+    // Oracle UCP and JDBC driver
+    implementation 'com.oracle.database.jdbc:ucp'
+    runtimeOnly 'com.oracle.database.jdbc:ojdbc11'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'com.h2database:h2'

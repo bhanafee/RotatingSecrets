@@ -11,7 +11,7 @@ import javax.sql.DataSource;
 /**
  * Configures the HikariCP connection pool with dynamic credential support.
  *
- * <p>Uses {@link KubernetesCredentialsProvider} to supply fresh credentials
+ * <p>Uses {@link DynamicHikariCredentialsProvider} to supply fresh credentials
  * for each new physical connection, enabling seamless password rotation.</p>
  */
 @Configuration
@@ -28,7 +28,7 @@ public class HikariDataSourceConfig {
      */
     @Bean
     public DataSource dataSource(
-            KubernetesCredentialsProvider credentialsProvider,
+            DynamicHikariCredentialsProvider credentialsProvider,
             @Value("${pool.min-size}") int minPoolSize,
             @Value("${pool.max-size}") int maxPoolSize,
             @Value("${pool.connection-timeout-ms}") long connectionTimeoutMs) {

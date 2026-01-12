@@ -21,7 +21,8 @@ class HikariDataSourceConfigTest {
     @TempDir
     Path tempDir;
 
-    private KubernetesCredentialsProvider credentialsProvider;
+    private DynamicHikariCredentialsProvider
+            credentialsProvider;
     private HikariDataSourceConfig config;
 
     @BeforeEach
@@ -30,7 +31,7 @@ class HikariDataSourceConfigTest {
         Files.writeString(tempDir.resolve("username"), "sa");
         Files.writeString(tempDir.resolve("password"), "");
 
-        credentialsProvider = new KubernetesCredentialsProvider(tempDir.toString());
+        credentialsProvider = new DynamicHikariCredentialsProvider(tempDir.toString());
         config = new HikariDataSourceConfig();
     }
 
