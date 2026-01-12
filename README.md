@@ -20,7 +20,7 @@ When running in Kubernetes with a secrets manager (HashiCorp Vault, OpenBao, Ext
 
 - Java 21
 - Gradle 9.2+
-- Oracle Database (or H2 for testing)
+- Any JDBC-compatible database (PostgreSQL, Oracle, MySQL, MariaDB, SQL Server, DB2, etc.)
 - Kubernetes cluster with secrets management (for production)
 
 ## Project Structure
@@ -56,9 +56,24 @@ The application expects three files in the secrets directory:
 
 | File | Description |
 |------|-------------|
-| `jdbc-url` | JDBC connection URL (e.g., `jdbc:oracle:thin:@//host:1521/service`) |
+| `jdbc-url` | JDBC connection URL (e.g., `jdbc:postgresql://host:5432/database`) |
 | `username` | Database username |
 | `password` | Database password |
+
+### Supported Databases
+
+The application uses standard ANSI SQL and works with any JDBC-compatible database. Configure the appropriate driver in `build.gradle`:
+
+```groovy
+runtimeOnly 'org.postgresql:postgresql'                   // PostgreSQL
+runtimeOnly 'com.oracle.database.jdbc:ojdbc11'            // Oracle
+runtimeOnly 'com.mysql:mysql-connector-j'                 // MySQL
+runtimeOnly 'org.mariadb.jdbc:mariadb-java-client'        // MariaDB
+runtimeOnly 'com.microsoft.sqlserver:mssql-jdbc'          // SQL Server
+runtimeOnly 'com.ibm.db2:jcc'                             // IBM DB2
+```
+
+See the [HikariCP documentation](https://github.com/brettwooldridge/HikariCP#popular-datasource-class-names) for additional supported databases.
 
 ## Building
 
@@ -74,7 +89,7 @@ Create the secret files in a local directory:
 
 ```bash
 mkdir -p /tmp/secrets/database
-echo "jdbc:oracle:thin:@//localhost:1521/XEPDB1" > /tmp/secrets/database/jdbc-url
+echo "jdbc:postgresql://localhost:5432/mydb" > /tmp/secrets/database/jdbc-url
 echo "myuser" > /tmp/secrets/database/username
 echo "mypassword" > /tmp/secrets/database/password
 ```
@@ -98,7 +113,7 @@ metadata:
     vault.hashicorp.com/agent-inject-secret-jdbc-url: "database/creds/myapp"
     vault.hashicorp.com/agent-inject-template-jdbc-url: |
       {{- with secret "database/creds/myapp" -}}
-      jdbc:oracle:thin:@//db-host:1521/service
+      jdbc:postgresql://db-host:5432/mydb
       {{- end }}
 spec:
   containers:
@@ -108,7 +123,7 @@ spec:
 
 ## Testing
 
-The project includes comprehensive unit and integration tests using H2 in Oracle compatibility mode:
+The project includes comprehensive unit and integration tests using H2 in-memory database:
 
 ```bash
 ./gradlew test
@@ -130,7 +145,6 @@ The project includes comprehensive unit and integration tests using H2 in Oracle
 | HikariCP | (via Spring Data JPA) |
 | Spring Cloud Vault | 2025.1.0 |
 | Resilience4j | (via Spring Cloud) |
-| Oracle JDBC | ojdbc11 |
 | Gradle | 9.2.1 |
 
 ## Production Considerations

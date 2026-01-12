@@ -40,7 +40,6 @@ public class DataSourceConfig {
         config.setMaximumPoolSize(maxPoolSize);
         config.setConnectionTimeout(connectionTimeoutMs);
         config.setPoolName("RotatingSecretsPool");
-        config.setConnectionTestQuery("SELECT 1 FROM DUAL");
 
         return new HikariDataSource(config);
     }

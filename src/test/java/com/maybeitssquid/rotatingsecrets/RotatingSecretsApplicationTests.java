@@ -49,7 +49,7 @@ class RotatingSecretsApplicationTests {
     void dataSource_canExecuteQueries() throws SQLException {
         try (Connection conn = dataSource.getConnection();
              Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery("SELECT 1 FROM DUAL")) {
+             ResultSet rs = stmt.executeQuery("SELECT 1")) {
 
             assertTrue(rs.next());
             assertEquals(1, rs.getInt(1));

@@ -28,16 +28,9 @@ class DatabasePollingServiceTest {
     void setUp() throws SQLException {
         System.setOut(new PrintStream(outputCapture));
 
-        // Create H2 database with Oracle compatibility for DUAL table
+        // Create H2 in-memory database
         h2Connection = DriverManager.getConnection(
-                "jdbc:h2:mem:testdb;MODE=Oracle;DB_CLOSE_DELAY=-1", "sa", "");
-
-        // Create DUAL table for Oracle compatibility
-        try (Statement stmt = h2Connection.createStatement()) {
-            stmt.execute("CREATE TABLE IF NOT EXISTS DUAL (DUMMY VARCHAR(1))");
-            stmt.execute("DELETE FROM DUAL");
-            stmt.execute("INSERT INTO DUAL VALUES ('X')");
-        }
+                "jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1", "sa", "");
 
         dataSource = mock(DataSource.class);
         when(dataSource.getConnection()).thenReturn(h2Connection);

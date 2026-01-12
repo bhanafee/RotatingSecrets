@@ -23,7 +23,7 @@ import java.time.Instant;
 public class DatabasePollingService {
 
     private static final Logger log = LoggerFactory.getLogger(DatabasePollingService.class);
-    private static final String QUERY = "SELECT TO_CHAR(SYSDATE, 'YYYY-MM-DD HH24:MI:SS') FROM DUAL";
+    private static final String QUERY = "SELECT CURRENT_TIMESTAMP";
 
     private final DataSource dataSource;
 
