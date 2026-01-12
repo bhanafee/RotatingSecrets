@@ -1,7 +1,5 @@
 package com.maybeitssquid.rotatingsecrets;
 
-import com.zaxxer.hikari.HikariCredentialsProvider;
-import com.zaxxer.hikari.util.Credentials;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,8 +12,7 @@ import java.nio.file.Path;
 /**
  * Provides database credentials by reading from Kubernetes-mounted secret files.
  *
- * <p>Implements {@link HikariCredentialsProvider} so that HikariCP calls
- * {@link #getCredentials()} each time it creates a new physical connection,
+ * <p>This provider reads fresh credentials each time its methods are called,
  * ensuring the latest credentials are used after Vault rotates passwords.</p>
  *
  * <p>Expects secrets mounted at the configured path with the following files:</p>
@@ -24,11 +21,9 @@ import java.nio.file.Path;
  *   <li>{@code username} - Database username</li>
  *   <li>{@code password} - Database password</li>
  * </ul>
- *
- * @see com.zaxxer.hikari.HikariCredentialsProvider
  */
 @Component
-public class KubernetesCredentialsProvider implements HikariCredentialsProvider {
+public class KubernetesCredentialsProvider {
 
     private static final Logger log = LoggerFactory.getLogger(KubernetesCredentialsProvider.class);
 
@@ -50,17 +45,23 @@ public class KubernetesCredentialsProvider implements HikariCredentialsProvider 
     }
 
     /**
-     * {@inheritDoc}
+     * Reads the username fresh from the mounted secret file.
      *
-     * <p>Reads username and password fresh from the mounted secret files,
-     * ensuring rotated credentials are used for new connections.</p>
+     * @return the database username
      */
-    @Override
-    public Credentials getCredentials() {
+    public String getUsername() {
         String username = readSecret(usernamePath, "username");
-        String password = readSecret(passwordPath, "password");
         log.info("Providing credentials for user: {}", username);
-        return new Credentials(username, password);
+        return username;
+    }
+
+    /**
+     * Reads the password fresh from the mounted secret file.
+     *
+     * @return the database password
+     */
+    public String getPassword() {
+        return readSecret(passwordPath, "password");
     }
 
     /**

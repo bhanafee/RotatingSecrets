@@ -1,6 +1,5 @@
 package com.maybeitssquid.rotatingsecrets;
 
-import com.zaxxer.hikari.util.Credentials;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -28,11 +27,17 @@ class KubernetesCredentialsProviderTest {
     }
 
     @Test
-    void getCredentials_returnsUsernameAndPassword() {
-        Credentials credentials = provider.getCredentials();
+    void getUsername_returnsUsername() {
+        String username = provider.getUsername();
 
-        assertEquals("testuser", credentials.getUsername());
-        assertEquals("testpass", credentials.getPassword());
+        assertEquals("testuser", username);
+    }
+
+    @Test
+    void getPassword_returnsPassword() {
+        String password = provider.getPassword();
+
+        assertEquals("testpass", password);
     }
 
     @Test
@@ -47,23 +52,19 @@ class KubernetesCredentialsProviderTest {
         Files.writeString(tempDir.resolve("username"), "  spaceduser  \n");
         Files.writeString(tempDir.resolve("password"), "\tspacedpass\t\n");
 
-        Credentials credentials = provider.getCredentials();
-
-        assertEquals("spaceduser", credentials.getUsername());
-        assertEquals("spacedpass", credentials.getPassword());
+        assertEquals("spaceduser", provider.getUsername());
+        assertEquals("spacedpass", provider.getPassword());
     }
 
     @Test
     void getCredentials_readsUpdatedValues() throws IOException {
-        Credentials first = provider.getCredentials();
-        assertEquals("testuser", first.getUsername());
+        assertEquals("testuser", provider.getUsername());
 
         Files.writeString(tempDir.resolve("username"), "rotateduser");
         Files.writeString(tempDir.resolve("password"), "rotatedpass");
 
-        Credentials second = provider.getCredentials();
-        assertEquals("rotateduser", second.getUsername());
-        assertEquals("rotatedpass", second.getPassword());
+        assertEquals("rotateduser", provider.getUsername());
+        assertEquals("rotatedpass", provider.getPassword());
     }
 
     @Test
@@ -71,6 +72,6 @@ class KubernetesCredentialsProviderTest {
         KubernetesCredentialsProvider badProvider =
                 new KubernetesCredentialsProvider("/nonexistent/path");
 
-        assertThrows(RuntimeException.class, badProvider::getCredentials);
+        assertThrows(RuntimeException.class, badProvider::getUsername);
     }
 }
