@@ -1,4 +1,4 @@
-package com.maybeitssquid.rotatingsecrets;
+package com.maybeitssquid.rotatingsecrets.ucp;
 
 import org.h2.jdbcx.JdbcDataSource;
 import org.springframework.boot.test.context.TestConfiguration;
