@@ -1,4 +1,4 @@
-package com.maybeitssquid.rotatingsecrets;
+package com.maybeitssquid.rotatingsecrets.hikari;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;

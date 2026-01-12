@@ -1,4 +1,4 @@
-package com.maybeitssquid.rotatingsecrets;
+package com.maybeitssquid.rotatingsecrets.hikari;
 
 import com.zaxxer.hikari.util.Credentials;
 import org.junit.jupiter.api.BeforeEach;

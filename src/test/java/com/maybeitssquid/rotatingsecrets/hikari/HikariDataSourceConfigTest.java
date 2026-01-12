@@ -1,4 +1,4 @@
-package com.maybeitssquid.rotatingsecrets;
+package com.maybeitssquid.rotatingsecrets.hikari;
 
 import com.zaxxer.hikari.HikariDataSource;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,13 +16,13 @@ import java.sql.Statement;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class DataSourceConfigTest {
+class HikariDataSourceConfigTest {
 
     @TempDir
     Path tempDir;
 
     private KubernetesCredentialsProvider credentialsProvider;
-    private DataSourceConfig config;
+    private HikariDataSourceConfig config;
 
     @BeforeEach
     void setUp() throws IOException {
@@ -31,7 +31,7 @@ class DataSourceConfigTest {
         Files.writeString(tempDir.resolve("password"), "");
 
         credentialsProvider = new KubernetesCredentialsProvider(tempDir.toString());
-        config = new DataSourceConfig();
+        config = new HikariDataSourceConfig();
     }
 
     @Test

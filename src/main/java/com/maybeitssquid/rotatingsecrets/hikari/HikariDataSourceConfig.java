@@ -1,4 +1,4 @@
-package com.maybeitssquid.rotatingsecrets;
+package com.maybeitssquid.rotatingsecrets.hikari;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
@@ -15,7 +15,7 @@ import javax.sql.DataSource;
  * for each new physical connection, enabling seamless password rotation.</p>
  */
 @Configuration
-public class DataSourceConfig {
+public class HikariDataSourceConfig {
 
     /**
      * Creates a HikariCP DataSource configured with dynamic credentials.

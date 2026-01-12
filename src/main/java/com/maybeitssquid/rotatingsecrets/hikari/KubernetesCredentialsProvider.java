@@ -1,4 +1,4 @@
-package com.maybeitssquid.rotatingsecrets;
+package com.maybeitssquid.rotatingsecrets.hikari;
 
 import com.zaxxer.hikari.HikariCredentialsProvider;
 import com.zaxxer.hikari.util.Credentials;
