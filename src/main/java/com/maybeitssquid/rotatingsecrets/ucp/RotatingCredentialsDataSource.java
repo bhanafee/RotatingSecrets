@@ -1,5 +1,6 @@
-package com.maybeitssquid.rotatingsecrets;
+package com.maybeitssquid.rotatingsecrets.ucp;
 
+import com.maybeitssquid.rotatingsecrets.KubernetesCredentialsProvider;
 import oracle.ucp.jdbc.PoolDataSource;
 
 import javax.sql.DataSource;

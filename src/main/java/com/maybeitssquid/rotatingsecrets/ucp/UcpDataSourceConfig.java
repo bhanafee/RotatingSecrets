@@ -1,5 +1,6 @@
-package com.maybeitssquid.rotatingsecrets;
+package com.maybeitssquid.rotatingsecrets.ucp;
 
+import com.maybeitssquid.rotatingsecrets.KubernetesCredentialsProvider;
 import oracle.ucp.jdbc.PoolDataSource;
 import oracle.ucp.jdbc.PoolDataSourceFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -16,7 +17,7 @@ import java.sql.SQLException;
  * fresh credentials for each new connection, enabling seamless password rotation.</p>
  */
 @Configuration
-public class DataSourceConfig {
+public class UcpDataSourceConfig {
 
     /**
      * Creates an Oracle UCP DataSource configured with dynamic credentials.
