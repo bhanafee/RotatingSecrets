@@ -24,7 +24,6 @@ public class HikariDataSourceConfig {
      * @param jdbcUrl             JDBC connection URL
      * @param minPoolSize         minimum number of idle connections in the pool
      * @param maxPoolSize         maximum number of connections in the pool
-     * @param connectionTimeoutMs maximum time to wait for a connection from the pool
      * @return configured HikariCP DataSource
      */
     @Bean
@@ -32,15 +31,13 @@ public class HikariDataSourceConfig {
             DynamicHikariCredentialsProvider credentialsProvider,
             @Value("${db.jdbc-url}") String jdbcUrl,
             @Value("${db.pool.min-size}") int minPoolSize,
-            @Value("${db.pool.max-size}") int maxPoolSize,
-            @Value("${db.pool.connection-timeout-ms}") long connectionTimeoutMs) {
+            @Value("${db.pool.max-size}") int maxPoolSize) {
 
         HikariConfig config = new HikariConfig();
         config.setJdbcUrl(jdbcUrl);
         config.setCredentialsProvider(credentialsProvider);
         config.setMinimumIdle(minPoolSize);
         config.setMaximumPoolSize(maxPoolSize);
-        config.setConnectionTimeout(connectionTimeoutMs);
         config.setPoolName("RotatingSecretsPool");
 
         return new HikariDataSource(config);

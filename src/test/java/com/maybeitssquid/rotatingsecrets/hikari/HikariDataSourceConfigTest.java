@@ -38,7 +38,7 @@ class HikariDataSourceConfigTest {
 
     @Test
     void dataSource_createsHikariDataSource() {
-        DataSource dataSource = config.dataSource(credentialsProvider, JDBC_URL, 1, 3, 5000);
+        DataSource dataSource = config.dataSource(credentialsProvider, JDBC_URL, 1, 3);
 
         assertInstanceOf(HikariDataSource.class, dataSource);
 
@@ -48,11 +48,10 @@ class HikariDataSourceConfigTest {
     @Test
     void dataSource_configuresPoolSize() {
         HikariDataSource dataSource = (HikariDataSource) config.dataSource(
-                credentialsProvider, JDBC_URL, 2, 5, 10000);
+                credentialsProvider, JDBC_URL, 2, 5);
 
         assertEquals(2, dataSource.getMinimumIdle());
         assertEquals(5, dataSource.getMaximumPoolSize());
-        assertEquals(10000, dataSource.getConnectionTimeout());
 
         dataSource.close();
     }
@@ -60,7 +59,7 @@ class HikariDataSourceConfigTest {
     @Test
     void dataSource_setsPoolName() {
         HikariDataSource dataSource = (HikariDataSource) config.dataSource(
-                credentialsProvider, JDBC_URL, 1, 3, 5000);
+                credentialsProvider, JDBC_URL, 1, 3);
 
         assertEquals("RotatingSecretsPool", dataSource.getPoolName());
 
@@ -69,7 +68,7 @@ class HikariDataSourceConfigTest {
 
     @Test
     void dataSource_canExecuteQueries() throws SQLException {
-        DataSource dataSource = config.dataSource(credentialsProvider, JDBC_URL, 1, 3, 5000);
+        DataSource dataSource = config.dataSource(credentialsProvider, JDBC_URL, 1, 3);
 
         try (Connection conn = dataSource.getConnection();
              Statement stmt = conn.createStatement();
@@ -85,7 +84,7 @@ class HikariDataSourceConfigTest {
     @Test
     void dataSource_poolsConnections() throws SQLException {
         HikariDataSource dataSource = (HikariDataSource) config.dataSource(
-                credentialsProvider, JDBC_URL, 1, 3, 5000);
+                credentialsProvider, JDBC_URL, 1, 3);
 
         try (Connection conn1 = dataSource.getConnection()) {
             assertNotNull(conn1);

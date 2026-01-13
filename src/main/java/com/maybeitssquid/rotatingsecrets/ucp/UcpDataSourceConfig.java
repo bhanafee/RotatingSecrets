@@ -26,7 +26,6 @@ public class UcpDataSourceConfig {
      * @param jdbcUrl             JDBC connection URL
      * @param minPoolSize         minimum number of connections in the pool
      * @param maxPoolSize         maximum number of connections in the pool
-     * @param connectionTimeoutMs maximum time to wait for a connection from the pool
      * @return configured DataSource with rotating credentials support
      * @throws SQLException if pool configuration fails
      */
@@ -35,8 +34,7 @@ public class UcpDataSourceConfig {
             CredentialsProvider credentialsProvider,
             @Value("${db.jdbc-url}") String jdbcUrl,
             @Value("${pool.min-size}") int minPoolSize,
-            @Value("${pool.max-size}") int maxPoolSize,
-            @Value("${pool.connection-timeout-ms}") long connectionTimeoutMs) throws SQLException {
+            @Value("${pool.max-size}") int maxPoolSize) throws SQLException {
 
         PoolDataSource pds = PoolDataSourceFactory.getPoolDataSource();
         pds.setConnectionFactoryClassName("oracle.jdbc.pool.OracleDataSource");
@@ -44,7 +42,6 @@ public class UcpDataSourceConfig {
         pds.setConnectionPoolName("RotatingSecretsPool");
         pds.setMinPoolSize(minPoolSize);
         pds.setMaxPoolSize(maxPoolSize);
-        pds.setConnectionWaitTimeout((int) (connectionTimeoutMs / 1000));
 
         return new RotatingCredentialsDataSource(pds, credentialsProvider);
     }

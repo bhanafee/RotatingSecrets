@@ -1,7 +1,7 @@
 package com.maybeitssquid.rotatingsecrets.hikari;
 
-import com.zaxxer.hikari.HikariCredentialsProvider;
 import com.maybeitssquid.rotatingsecrets.CredentialsProvider;
+import com.zaxxer.hikari.HikariCredentialsProvider;
 import com.zaxxer.hikari.util.Credentials;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,5 +39,6 @@ public class DynamicHikariCredentialsProvider extends CredentialsProvider implem
         String username = getUsername();
         String password = getPassword();
         log.info("Providing credentials for user: {}", username);
-        return new Credentials(username, password);    }
+        return new Credentials(username, password);
+    }
 }
