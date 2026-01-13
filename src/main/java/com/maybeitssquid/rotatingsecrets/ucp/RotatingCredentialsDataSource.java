@@ -15,8 +15,9 @@ import java.util.logging.Logger;
  * A DataSource wrapper that provides dynamic credential rotation for Oracle UCP.
  *
  * <p>Oracle UCP does not have an equivalent to HikariCP's CredentialsProvider
- * interface. This wrapper intercepts {@link #getConnection()} calls and delegates
- * to {@link PoolDataSource#getConnection(String, String)} with fresh credentials.</p>
+ * interface. This wrapper intercepts {@link #getConnection()} calls, checks whether
+ * credentials have changed, and if so updates the pool with fresh credentials before
+ * acquiring the new connection.</p>
  *
  * <p>This allows the application to use standard {@code dataSource.getConnection()}
  * calls while still benefiting from credential rotation.</p>
@@ -47,6 +48,10 @@ public class RotatingCredentialsDataSource implements DataSource {
      * <p>Reads the current username and password from the mounted secret files,
      * then delegates to the underlying pool's {@code getConnection(username, password)}
      * method. This ensures rotated credentials are used for new connections.</p>
+     *
+     * <p><b>CAUTION:</b> UCP ensures that the credentials will be used for <i>new</i>
+     * connections but does not document a guarantee that the returned connection will be new.
+     * It may return an existing connection even after the pool configuration is changed.</p>
      *
      * @return a connection to the database
      * @throws SQLException if a database access error occurs
