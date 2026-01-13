@@ -1,7 +1,7 @@
 package com.maybeitssquid.rotatingsecrets.hikari;
 
 import com.zaxxer.hikari.HikariCredentialsProvider;
-import com.maybeitssquid.rotatingsecrets.KubernetesCredentialsProvider;
+import com.maybeitssquid.rotatingsecrets.CredentialsProvider;
 import com.zaxxer.hikari.util.Credentials;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,7 +22,7 @@ import org.springframework.stereotype.Component;
  * </ul>
  */
 @Component
-public class DynamicHikariCredentialsProvider extends KubernetesCredentialsProvider implements HikariCredentialsProvider {
+public class DynamicHikariCredentialsProvider extends CredentialsProvider implements HikariCredentialsProvider {
     private static final Logger log = LoggerFactory.getLogger(DynamicHikariCredentialsProvider.class);
 
     /**

@@ -8,8 +8,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-public class KubernetesCredentialsProvider {
-    private static final Logger log = LoggerFactory.getLogger(KubernetesCredentialsProvider.class);
+public class CredentialsProvider {
+    private static final Logger log = LoggerFactory.getLogger(CredentialsProvider.class);
     protected final Path jdbcUrlPath;
     protected final Path usernamePath;
     protected final Path passwordPath;
@@ -19,7 +19,7 @@ public class KubernetesCredentialsProvider {
      *
      * @param secretsPath base path where Kubernetes mounts the secret files
      */
-    public KubernetesCredentialsProvider(
+    public CredentialsProvider(
             @Value("${k8s.secrets.path:/var/run/secrets/database}") String secretsPath) {
         Path basePath = Path.of(secretsPath);
         this.jdbcUrlPath = basePath.resolve("jdbc-url");

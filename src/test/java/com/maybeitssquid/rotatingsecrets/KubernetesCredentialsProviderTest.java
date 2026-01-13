@@ -15,7 +15,7 @@ class KubernetesCredentialsProviderTest {
     @TempDir
     Path tempDir;
 
-    private KubernetesCredentialsProvider provider;
+    private CredentialsProvider provider;
 
     @BeforeEach
     void setUp() throws IOException {
@@ -23,7 +23,7 @@ class KubernetesCredentialsProviderTest {
         Files.writeString(tempDir.resolve("username"), "testuser");
         Files.writeString(tempDir.resolve("password"), "testpass");
 
-        provider = new KubernetesCredentialsProvider(tempDir.toString());
+        provider = new CredentialsProvider(tempDir.toString());
     }
 
     @Test
@@ -69,8 +69,8 @@ class KubernetesCredentialsProviderTest {
 
     @Test
     void constructor_throwsWhenSecretsPathMissing() {
-        KubernetesCredentialsProvider badProvider =
-                new KubernetesCredentialsProvider("/nonexistent/path");
+        CredentialsProvider badProvider =
+                new CredentialsProvider("/nonexistent/path");
 
         assertThrows(RuntimeException.class, badProvider::getUsername);
     }

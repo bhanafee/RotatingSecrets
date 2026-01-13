@@ -1,6 +1,6 @@
 package com.maybeitssquid.rotatingsecrets.ucp;
 
-import com.maybeitssquid.rotatingsecrets.KubernetesCredentialsProvider;
+import com.maybeitssquid.rotatingsecrets.CredentialsProvider;
 import oracle.ucp.jdbc.PoolDataSource;
 
 import javax.sql.DataSource;
@@ -24,7 +24,7 @@ import java.util.logging.Logger;
 public class RotatingCredentialsDataSource implements DataSource {
 
     private final PoolDataSource poolDataSource;
-    private final KubernetesCredentialsProvider credentialsProvider;
+    private final CredentialsProvider credentialsProvider;
 
     /**
      * Creates a new rotating credentials DataSource.
@@ -33,7 +33,7 @@ public class RotatingCredentialsDataSource implements DataSource {
      * @param credentialsProvider  provides fresh credentials from Kubernetes secrets
      */
     public RotatingCredentialsDataSource(PoolDataSource poolDataSource,
-                                         KubernetesCredentialsProvider credentialsProvider) {
+                                         CredentialsProvider credentialsProvider) {
         this.poolDataSource = poolDataSource;
         this.credentialsProvider = credentialsProvider;
     }

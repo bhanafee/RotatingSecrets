@@ -29,9 +29,9 @@ public class HikariDataSourceConfig {
     @Bean
     public DataSource dataSource(
             DynamicHikariCredentialsProvider credentialsProvider,
-            @Value("${pool.min-size}") int minPoolSize,
-            @Value("${pool.max-size}") int maxPoolSize,
-            @Value("${pool.connection-timeout-ms}") long connectionTimeoutMs) {
+            @Value("${db.pool.min-size}") int minPoolSize,
+            @Value("${db.pool.max-size}") int maxPoolSize,
+            @Value("${db.pool.connection-timeout-ms}") long connectionTimeoutMs) {
 
         HikariConfig config = new HikariConfig();
         config.setJdbcUrl(credentialsProvider.getJdbcUrl());

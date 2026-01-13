@@ -1,6 +1,6 @@
 package com.maybeitssquid.rotatingsecrets.ucp;
 
-import com.maybeitssquid.rotatingsecrets.KubernetesCredentialsProvider;
+import com.maybeitssquid.rotatingsecrets.CredentialsProvider;
 import oracle.ucp.jdbc.PoolDataSource;
 import oracle.ucp.jdbc.PoolDataSourceFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -31,7 +31,7 @@ public class UcpDataSourceConfig {
      */
     @Bean
     public DataSource dataSource(
-            KubernetesCredentialsProvider credentialsProvider,
+            CredentialsProvider credentialsProvider,
             @Value("${pool.min-size}") int minPoolSize,
             @Value("${pool.max-size}") int maxPoolSize,
             @Value("${pool.connection-timeout-ms}") long connectionTimeoutMs) throws SQLException {
