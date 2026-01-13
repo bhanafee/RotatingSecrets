@@ -27,14 +27,14 @@ class KubernetesCredentialsProviderTest {
 
     @Test
     void getUsername_returnsUsername() {
-        String username = provider.getUsername();
+        String username = provider.getCurrentUsername();
 
         assertEquals("testuser", username);
     }
 
     @Test
     void getPassword_returnsPassword() {
-        String password = provider.getPassword();
+        String password = provider.getCurrentPassword();
 
         assertEquals("testpass", password);
     }
@@ -44,19 +44,19 @@ class KubernetesCredentialsProviderTest {
         Files.writeString(tempDir.resolve("username"), "  spaceduser  \n");
         Files.writeString(tempDir.resolve("password"), "\tspacedpass\t\n");
 
-        assertEquals("spaceduser", provider.getUsername());
-        assertEquals("spacedpass", provider.getPassword());
+        assertEquals("spaceduser", provider.getCurrentUsername());
+        assertEquals("spacedpass", provider.getCurrentPassword());
     }
 
     @Test
     void getCredentials_readsUpdatedValues() throws IOException {
-        assertEquals("testuser", provider.getUsername());
+        assertEquals("testuser", provider.getCurrentUsername());
 
         Files.writeString(tempDir.resolve("username"), "rotateduser");
         Files.writeString(tempDir.resolve("password"), "rotatedpass");
 
-        assertEquals("rotateduser", provider.getUsername());
-        assertEquals("rotatedpass", provider.getPassword());
+        assertEquals("rotateduser", provider.getCurrentUsername());
+        assertEquals("rotatedpass", provider.getCurrentPassword());
     }
 
     @Test
@@ -64,6 +64,6 @@ class KubernetesCredentialsProviderTest {
         CredentialsProvider badProvider =
                 new CredentialsProvider("/nonexistent/path");
 
-        assertThrows(RuntimeException.class, badProvider::getUsername);
+        assertThrows(RuntimeException.class, badProvider::getCurrentUsername);
     }
 }

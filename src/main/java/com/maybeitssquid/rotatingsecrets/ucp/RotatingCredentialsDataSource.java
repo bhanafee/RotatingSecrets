@@ -8,6 +8,7 @@ import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
+import java.util.Objects;
 import java.util.logging.Logger;
 
 /**
@@ -15,8 +16,7 @@ import java.util.logging.Logger;
  *
  * <p>Oracle UCP does not have an equivalent to HikariCP's CredentialsProvider
  * interface. This wrapper intercepts {@link #getConnection()} calls and delegates
- * to {@link PoolDataSource#getConnection(String, String)} with fresh credentials
- * read from Kubernetes-mounted secret files.</p>
+ * to {@link PoolDataSource#getConnection(String, String)} with fresh credentials.</p>
  *
  * <p>This allows the application to use standard {@code dataSource.getConnection()}
  * calls while still benefiting from credential rotation.</p>
@@ -25,6 +25,9 @@ public class RotatingCredentialsDataSource implements DataSource {
 
     private final PoolDataSource poolDataSource;
     private final CredentialsProvider credentialsProvider;
+    private final Object credentialsLock = new Object();
+    private volatile String cachedUsername;
+    private volatile String cachedPassword;
 
     /**
      * Creates a new rotating credentials DataSource.
@@ -50,9 +53,19 @@ public class RotatingCredentialsDataSource implements DataSource {
      */
     @Override
     public Connection getConnection() throws SQLException {
-        String username = credentialsProvider.getUsername();
-        String password = credentialsProvider.getPassword();
-        return poolDataSource.getConnection(username, password);
+        String username = credentialsProvider.getCurrentUsername();
+        String password = credentialsProvider.getCurrentPassword();
+        if (!Objects.equals(username, cachedUsername) || !Objects.equals(password, cachedPassword)) {
+            synchronized (credentialsLock) {
+                if (!Objects.equals(username, cachedUsername) || !Objects.equals(password, cachedPassword)) {
+                    poolDataSource.setUser(username);
+                    poolDataSource.setPassword(password);
+                    cachedUsername = username;
+                    cachedPassword = password;
+                }
+            }
+        }
+        return poolDataSource.getConnection();
     }
 
     /**

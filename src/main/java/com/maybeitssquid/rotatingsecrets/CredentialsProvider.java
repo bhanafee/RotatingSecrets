@@ -30,7 +30,7 @@ public class CredentialsProvider {
      *
      * @return the database username
      */
-    public String getUsername() {
+    public String getCurrentUsername() {
         String username = readSecret(usernamePath, "username");
         log.info("Providing credentials for user: {}", username);
         return username;
@@ -41,8 +41,10 @@ public class CredentialsProvider {
      *
      * @return the database password
      */
-    public String getPassword() {
-        return readSecret(passwordPath, "password");
+    public String getCurrentPassword() {
+        String password = readSecret(passwordPath, "password");
+        log.info("Providing password");
+        return password;
     }
 
     private String readSecret(Path path, String name) {

@@ -36,8 +36,8 @@ public class DynamicHikariCredentialsProvider extends CredentialsProvider implem
 
     @Override
     public Credentials getCredentials() {
-        String username = getUsername();
-        String password = getPassword();
+        String username = getCurrentUsername();
+        String password = getCurrentPassword();
         log.info("Providing credentials for user: {}", username);
         return new Credentials(username, password);
     }
