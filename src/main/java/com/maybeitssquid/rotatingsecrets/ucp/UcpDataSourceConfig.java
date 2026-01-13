@@ -23,6 +23,7 @@ public class UcpDataSourceConfig {
      * Creates an Oracle UCP DataSource configured with dynamic credentials.
      *
      * @param credentialsProvider provides credentials from Kubernetes secrets
+     * @param jdbcUrl             JDBC connection URL
      * @param minPoolSize         minimum number of connections in the pool
      * @param maxPoolSize         maximum number of connections in the pool
      * @param connectionTimeoutMs maximum time to wait for a connection from the pool
@@ -32,13 +33,14 @@ public class UcpDataSourceConfig {
     @Bean
     public DataSource dataSource(
             CredentialsProvider credentialsProvider,
+            @Value("${db.jdbc-url}") String jdbcUrl,
             @Value("${pool.min-size}") int minPoolSize,
             @Value("${pool.max-size}") int maxPoolSize,
             @Value("${pool.connection-timeout-ms}") long connectionTimeoutMs) throws SQLException {
 
         PoolDataSource pds = PoolDataSourceFactory.getPoolDataSource();
         pds.setConnectionFactoryClassName("oracle.jdbc.pool.OracleDataSource");
-        pds.setURL(credentialsProvider.getJdbcUrl());
+        pds.setURL(jdbcUrl);
         pds.setConnectionPoolName("RotatingSecretsPool");
         pds.setMinPoolSize(minPoolSize);
         pds.setMaxPoolSize(maxPoolSize);

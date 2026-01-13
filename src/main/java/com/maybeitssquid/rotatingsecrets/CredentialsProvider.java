@@ -10,7 +10,6 @@ import java.nio.file.Path;
 
 public class CredentialsProvider {
     private static final Logger log = LoggerFactory.getLogger(CredentialsProvider.class);
-    protected final Path jdbcUrlPath;
     protected final Path usernamePath;
     protected final Path passwordPath;
 
@@ -22,7 +21,6 @@ public class CredentialsProvider {
     public CredentialsProvider(
             @Value("${k8s.secrets.path:/var/run/secrets/database}") String secretsPath) {
         Path basePath = Path.of(secretsPath);
-        this.jdbcUrlPath = basePath.resolve("jdbc-url");
         this.usernamePath = basePath.resolve("username");
         this.passwordPath = basePath.resolve("password");
     }
@@ -45,15 +43,6 @@ public class CredentialsProvider {
      */
     public String getPassword() {
         return readSecret(passwordPath, "password");
-    }
-
-    /**
-     * Reads the JDBC URL from the mounted secret file.
-     *
-     * @return the JDBC connection URL
-     */
-    public String getJdbcUrl() {
-        return readSecret(jdbcUrlPath, "jdbc-url");
     }
 
     private String readSecret(Path path, String name) {

@@ -19,7 +19,6 @@ class KubernetesCredentialsProviderTest {
 
     @BeforeEach
     void setUp() throws IOException {
-        Files.writeString(tempDir.resolve("jdbc-url"), "jdbc:h2:mem:testdb");
         Files.writeString(tempDir.resolve("username"), "testuser");
         Files.writeString(tempDir.resolve("password"), "testpass");
 
@@ -38,13 +37,6 @@ class KubernetesCredentialsProviderTest {
         String password = provider.getPassword();
 
         assertEquals("testpass", password);
-    }
-
-    @Test
-    void getJdbcUrl_returnsUrl() {
-        String jdbcUrl = provider.getJdbcUrl();
-
-        assertEquals("jdbc:h2:mem:testdb", jdbcUrl);
     }
 
     @Test

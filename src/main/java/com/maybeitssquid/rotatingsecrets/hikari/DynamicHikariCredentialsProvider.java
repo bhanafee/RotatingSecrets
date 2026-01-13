@@ -16,7 +16,6 @@ import org.springframework.stereotype.Component;
  *
  * <p>Expects secrets mounted at the configured path with the following files:</p>
  * <ul>
- *   <li>{@code jdbc-url} - JDBC connection URL</li>
  *   <li>{@code username} - Database username</li>
  *   <li>{@code password} - Database password</li>
  * </ul>

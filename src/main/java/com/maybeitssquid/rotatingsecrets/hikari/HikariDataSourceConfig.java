@@ -21,6 +21,7 @@ public class HikariDataSourceConfig {
      * Creates a HikariCP DataSource configured with dynamic credentials.
      *
      * @param credentialsProvider provides credentials from Kubernetes secrets
+     * @param jdbcUrl             JDBC connection URL
      * @param minPoolSize         minimum number of idle connections in the pool
      * @param maxPoolSize         maximum number of connections in the pool
      * @param connectionTimeoutMs maximum time to wait for a connection from the pool
@@ -29,12 +30,13 @@ public class HikariDataSourceConfig {
     @Bean
     public DataSource dataSource(
             DynamicHikariCredentialsProvider credentialsProvider,
+            @Value("${db.jdbc-url}") String jdbcUrl,
             @Value("${db.pool.min-size}") int minPoolSize,
             @Value("${db.pool.max-size}") int maxPoolSize,
             @Value("${db.pool.connection-timeout-ms}") long connectionTimeoutMs) {
 
         HikariConfig config = new HikariConfig();
-        config.setJdbcUrl(credentialsProvider.getJdbcUrl());
+        config.setJdbcUrl(jdbcUrl);
         config.setCredentialsProvider(credentialsProvider);
         config.setMinimumIdle(minPoolSize);
         config.setMaximumPoolSize(maxPoolSize);
