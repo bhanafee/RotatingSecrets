@@ -46,7 +46,8 @@ public class RotatingCredentialsDataSource implements DataSource {
      * Gets a connection using fresh credentials from Kubernetes secrets.
      *
      * <p>Reads the current username and password from the mounted secret files,
-     * then delegates to the underlying pool's {@code getConnection(username, password)}
+     * updates the username and password in the poolDataSource,
+     * then delegates to the underlying pool's {@code getConnection()}
      * method. This ensures rotated credentials are used for new connections.</p>
      *
      * <p><b>CAUTION:</b> UCP ensures that the credentials will be used for <i>new</i>
