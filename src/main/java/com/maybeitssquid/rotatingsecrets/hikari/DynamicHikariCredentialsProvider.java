@@ -31,7 +31,7 @@ public class DynamicHikariCredentialsProvider extends CredentialsProvider implem
      */
     public DynamicHikariCredentialsProvider(
             @Value("${k8s.secrets.path:/var/run/secrets/database}") String secretsPath) {
-        super(secretsPath);
+        super(secretsPath, true);
     }
 
     @Override

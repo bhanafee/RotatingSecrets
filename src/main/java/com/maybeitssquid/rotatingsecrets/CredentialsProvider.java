@@ -3,15 +3,24 @@ package com.maybeitssquid.rotatingsecrets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+@Service
 public class CredentialsProvider {
     private static final Logger log = LoggerFactory.getLogger(CredentialsProvider.class);
     protected final Path usernamePath;
     protected final Path passwordPath;
+
+    private String username;
+    private String password;
+
+    private final boolean alwaysRefresh;
+    private boolean refresh = true;
 
     /**
      * Creates a new credentials provider reading from the specified secrets path.
@@ -19,10 +28,17 @@ public class CredentialsProvider {
      * @param secretsPath base path where Kubernetes mounts the secret files
      */
     public CredentialsProvider(
-            @Value("${k8s.secrets.path:/var/run/secrets/database}") String secretsPath) {
+            @Value("${k8s.secrets.path:/var/run/secrets/database}") String secretsPath,
+            @Value("${k8s.secrets.alwaysRefresh:false}") final boolean alwaysRefresh) {
+        this.alwaysRefresh = alwaysRefresh;
         Path basePath = Path.of(secretsPath);
         this.usernamePath = basePath.resolve("username");
         this.passwordPath = basePath.resolve("password");
+    }
+
+    @Scheduled(fixedDelayString = "${k8s.secrets.refreshInterval:30000}")
+    public void refreshCredentials() {
+        this.refresh = true;
     }
 
     /**
@@ -31,9 +47,11 @@ public class CredentialsProvider {
      * @return the database username
      */
     public String getCurrentUsername() {
-        String username = readSecret(usernamePath, "username");
+        if (alwaysRefresh || refresh || this.username == null) {
+            this.username = readSecret(usernamePath, "username");
+        }
         log.info("Providing credentials for user: {}", username);
-        return username;
+        return this.username;
     }
 
     /**
@@ -42,9 +60,11 @@ public class CredentialsProvider {
      * @return the database password
      */
     public String getCurrentPassword() {
-        String password = readSecret(passwordPath, "password");
+        if (alwaysRefresh || refresh || this.password == null) {
+            this.password = readSecret(passwordPath, "password");
+        }
         log.info("Providing password");
-        return password;
+        return this.password;
     }
 
     private String readSecret(Path path, String name) {
