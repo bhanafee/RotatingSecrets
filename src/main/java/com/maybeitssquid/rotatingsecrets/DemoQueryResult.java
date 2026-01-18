@@ -9,7 +9,7 @@ import java.time.Instant;
  * @param timestamp    instant when the query was executed (client-side)
  * @param databaseTime current time as reported by the database server
  */
-public record QueryResult(
+public record DemoQueryResult(
         String threadName,
         Instant timestamp,
         String databaseTime

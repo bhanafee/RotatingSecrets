@@ -20,9 +20,9 @@ import java.time.Instant;
  * and credential rotation behavior.</p>
  */
 @Service
-public class DatabasePollingService {
+public class DemoDatabasePollingService {
 
-    private static final Logger log = LoggerFactory.getLogger(DatabasePollingService.class);
+    private static final Logger log = LoggerFactory.getLogger(DemoDatabasePollingService.class);
     private static final String QUERY = "SELECT CURRENT_TIMESTAMP";
 
     private final DataSource dataSource;
@@ -32,7 +32,7 @@ public class DatabasePollingService {
      *
      * @param dataSource the connection pool to use for queries
      */
-    public DatabasePollingService(DataSource dataSource) {
+    public DemoDatabasePollingService(DataSource dataSource) {
         this.dataSource = dataSource;
     }
 
@@ -62,7 +62,7 @@ public class DatabasePollingService {
                 dbTime = rs.getString(1);
             }
 
-            QueryResult result = new QueryResult(
+            DemoQueryResult result = new DemoQueryResult(
                     threadName,
                     Instant.now(),
                     dbTime

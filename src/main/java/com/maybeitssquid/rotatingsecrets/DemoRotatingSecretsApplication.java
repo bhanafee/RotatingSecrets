@@ -19,7 +19,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  */
 @SpringBootApplication
 @EnableScheduling
-public class RotatingSecretsApplication {
+public class DemoRotatingSecretsApplication {
 
     /**
      * Application entry point.
@@ -27,7 +27,7 @@ public class RotatingSecretsApplication {
      * @param args command-line arguments
      */
     public static void main(String[] args) {
-        SpringApplication.run(RotatingSecretsApplication.class, args);
+        SpringApplication.run(DemoRotatingSecretsApplication.class, args);
     }
 
 }

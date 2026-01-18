@@ -2,6 +2,8 @@ package com.maybeitssquid.rotatingsecrets;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -12,7 +14,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
-@Service
+@Service("credentialsProvider")
 public class CredentialsProviderService {
     private static final Logger log = LoggerFactory.getLogger(CredentialsProviderService.class);
     protected final Path usernamePath;
@@ -48,10 +50,14 @@ public class CredentialsProviderService {
         }
     }
 
+    @Autowired
+    @Qualifier("hikariUpdater")
     public void setHikariUpdatable(UpdatableCredential<String> updatable) {
         this.updatables.add(updatable);
     }
 
+    @Autowired
+    @Qualifier("ucpUpdater")
     public void setUcpUpdatable(UpdatableCredential<String> updatable) {
         this.updatables.add(updatable);
     }

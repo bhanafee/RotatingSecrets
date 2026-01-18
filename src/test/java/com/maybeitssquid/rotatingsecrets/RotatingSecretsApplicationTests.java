@@ -17,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * Integration tests using H2 in-memory database.
  */
 @SpringBootTest(
-        classes = {TestConfig.class, DatabasePollingService.class},
+        classes = {DemoDatabasePollingService.class},
         properties = {
                 "spring.cloud.vault.enabled=false"
         }
@@ -29,7 +29,7 @@ class RotatingSecretsApplicationTests {
     private DataSource dataSource;
 
     @Autowired
-    private DatabasePollingService pollingService;
+    private DemoDatabasePollingService pollingService;
 
     @Test
     void contextLoads() {

@@ -11,7 +11,7 @@ class QueryResultTest {
     @Test
     void recordComponents_areAccessible() {
         Instant now = Instant.now();
-        QueryResult result = new QueryResult("test-thread", now, "2025-01-09 12:00:00");
+        DemoQueryResult result = new DemoQueryResult("test-thread", now, "2025-01-09 12:00:00");
 
         assertEquals("test-thread", result.threadName());
         assertEquals(now, result.timestamp());
@@ -21,7 +21,7 @@ class QueryResultTest {
     @Test
     void toString_returnsJsonFormat() {
         Instant timestamp = Instant.parse("2025-01-09T12:00:00Z");
-        QueryResult result = new QueryResult("poller", timestamp, "2025-01-09 12:00:00");
+        DemoQueryResult result = new DemoQueryResult("poller", timestamp, "2025-01-09 12:00:00");
 
         String json = result.toString();
 
@@ -32,7 +32,7 @@ class QueryResultTest {
 
     @Test
     void toString_handlesNullDatabaseTime() {
-        QueryResult result = new QueryResult("poller", Instant.now(), null);
+        DemoQueryResult result = new DemoQueryResult("poller", Instant.now(), null);
 
         String json = result.toString();
 
@@ -42,9 +42,9 @@ class QueryResultTest {
     @Test
     void equals_comparesAllFields() {
         Instant now = Instant.now();
-        QueryResult a = new QueryResult("thread", now, "time");
-        QueryResult b = new QueryResult("thread", now, "time");
-        QueryResult c = new QueryResult("other", now, "time");
+        DemoQueryResult a = new DemoQueryResult("thread", now, "time");
+        DemoQueryResult b = new DemoQueryResult("thread", now, "time");
+        DemoQueryResult c = new DemoQueryResult("other", now, "time");
 
         assertEquals(a, b);
         assertNotEquals(a, c);
@@ -53,8 +53,8 @@ class QueryResultTest {
     @Test
     void hashCode_isConsistent() {
         Instant now = Instant.now();
-        QueryResult a = new QueryResult("thread", now, "time");
-        QueryResult b = new QueryResult("thread", now, "time");
+        DemoQueryResult a = new DemoQueryResult("thread", now, "time");
+        DemoQueryResult b = new DemoQueryResult("thread", now, "time");
 
         assertEquals(a.hashCode(), b.hashCode());
     }

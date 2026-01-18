@@ -22,7 +22,7 @@ class DatabasePollingServiceTest {
 
     private Connection h2Connection;
     private DataSource dataSource;
-    private DatabasePollingService service;
+    private DemoDatabasePollingService service;
 
     @BeforeEach
     void setUp() throws SQLException {
@@ -35,7 +35,7 @@ class DatabasePollingServiceTest {
         dataSource = mock(DataSource.class);
         when(dataSource.getConnection()).thenReturn(h2Connection);
 
-        service = new DatabasePollingService(dataSource);
+        service = new DemoDatabasePollingService(dataSource);
     }
 
     @AfterEach
@@ -79,7 +79,7 @@ class DatabasePollingServiceTest {
         DataSource failingDataSource = mock(DataSource.class);
         when(failingDataSource.getConnection()).thenThrow(new SQLException("Connection failed"));
 
-        DatabasePollingService failingService = new DatabasePollingService(failingDataSource);
+        DemoDatabasePollingService failingService = new DemoDatabasePollingService(failingDataSource);
 
         assertDoesNotThrow(failingService::pollEveryFiveSeconds);
     }
@@ -92,7 +92,7 @@ class DatabasePollingServiceTest {
         when(mockConnection.createStatement()).thenReturn(mockStatement);
         when(mockStatement.executeQuery(anyString())).thenThrow(new SQLException("Query failed"));
 
-        DatabasePollingService mockService = new DatabasePollingService(dataSource);
+        DemoDatabasePollingService mockService = new DemoDatabasePollingService(dataSource);
         mockService.pollEveryFiveSeconds();
 
         verify(mockConnection).close();
