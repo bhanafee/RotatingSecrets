@@ -42,8 +42,8 @@ import java.util.List;
  * and the list of updatable components is safely managed.</p>
  *
  * @see UpdatableCredential
- * @see hikari.HikariCredentialsUpdater
- * @see ucp.UcpCredentialsUpdater
+ * @see com.maybeitssquid.rotatingsecrets.hikari.HikariCredentialsUpdater
+ * @see com.maybeitssquid.rotatingsecrets.ucp.UcpCredentialsUpdater
  */
 @Service("credentialsProvider")
 public class CredentialsProviderService {

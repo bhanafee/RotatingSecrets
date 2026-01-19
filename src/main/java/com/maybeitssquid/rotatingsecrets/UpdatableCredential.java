@@ -10,8 +10,8 @@ package com.maybeitssquid.rotatingsecrets;
  * <p>Implementations typically wrap connection pools and handle the pool-specific logic
  * for updating credentials and refreshing connections. For example:</p>
  * <ul>
- *   <li>{@link hikari.HikariCredentialsUpdater} - Updates HikariCP credentials and soft-evicts connections</li>
- *   <li>{@link ucp.UcpCredentialsUpdater} - Updates Oracle UCP credentials and refreshes the pool</li>
+ *   <li>{@link com.maybeitssquid.rotatingsecrets.hikari.HikariCredentialsUpdater} - Updates HikariCP credentials and soft-evicts connections</li>
+ *   <li>{@link com.maybeitssquid.rotatingsecrets.ucp.UcpCredentialsUpdater} - Updates Oracle UCP credentials and refreshes the pool</li>
  * </ul>
  *
  * @param <T> the type of the credential (typically {@link String} for passwords)
