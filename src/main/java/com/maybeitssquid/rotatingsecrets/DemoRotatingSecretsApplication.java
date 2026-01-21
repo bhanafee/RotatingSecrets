@@ -22,6 +22,13 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 public class DemoRotatingSecretsApplication {
 
     /**
+     * Default constructor.
+     */
+    public DemoRotatingSecretsApplication() {
+        // Spring Boot application entry point
+    }
+
+    /**
      * Application entry point.
      *
      * @param args command-line arguments

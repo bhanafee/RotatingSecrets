@@ -54,6 +54,13 @@ import org.springframework.context.annotation.Primary;
 @Configuration
 public class HikariDataSourceConfig {
 
+    /**
+     * Default constructor.
+     */
+    public HikariDataSourceConfig() {
+        // Configuration class for HikariCP DataSource
+    }
+
     private static final Logger log = LoggerFactory.getLogger(HikariDataSourceConfig.class);
 
     /** Reference to the created DataSource for cleanup. */

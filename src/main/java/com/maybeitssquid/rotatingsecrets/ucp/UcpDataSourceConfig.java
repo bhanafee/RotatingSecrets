@@ -45,6 +45,13 @@ import java.sql.SQLException;
 @Configuration
 public class UcpDataSourceConfig {
 
+    /**
+     * Default constructor.
+     */
+    public UcpDataSourceConfig() {
+        // Configuration class for Oracle UCP DataSource
+    }
+
     /** JDBC URL for the Oracle database connection. */
     @Value("${spring.datasource.ucp.url}")
     private String url;
