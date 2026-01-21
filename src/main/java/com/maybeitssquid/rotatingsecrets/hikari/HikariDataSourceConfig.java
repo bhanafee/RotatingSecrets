@@ -2,6 +2,9 @@ package com.maybeitssquid.rotatingsecrets.hikari;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import jakarta.annotation.PreDestroy;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -50,6 +53,11 @@ import org.springframework.context.annotation.Primary;
  */
 @Configuration
 public class HikariDataSourceConfig {
+
+    private static final Logger log = LoggerFactory.getLogger(HikariDataSourceConfig.class);
+
+    /** Reference to the created DataSource for cleanup. */
+    private HikariDataSource createdDataSource;
 
     /** JDBC URL for the database connection. */
     @Value("${spring.datasource.url}")
@@ -141,7 +149,23 @@ public class HikariDataSourceConfig {
         HikariDataSource dataSource = new HikariDataSource(hikariConfig);
         // Inject datasource back into updater for connection eviction
         credentialsUpdater.setDataSource(dataSource);
+        // Store reference for cleanup
+        this.createdDataSource = dataSource;
         return dataSource;
+    }
+
+    /**
+     * Explicitly closes the HikariDataSource on application shutdown.
+     *
+     * <p>While Spring typically handles DataSource cleanup, explicit closure
+     * ensures all connections are properly released.</p>
+     */
+    @PreDestroy
+    public void closeDataSource() {
+        if (createdDataSource != null && !createdDataSource.isClosed()) {
+            log.info("Closing HikariDataSource: {}", createdDataSource.getPoolName());
+            createdDataSource.close();
+        }
     }
 
     /**

@@ -17,8 +17,10 @@ public record DemoQueryResult(
     @Override
     public String toString() {
         return String.format(
-                "{\"thread\": \"%s\", \"timestamp\": \"%s\", \"dbTime\": \"%s\"}",
-                threadName, timestamp, databaseTime
+                "{\"thread\": \"%s\", \"timestamp\": \"%s\", \"dbTime\": %s}",
+                threadName,
+                timestamp,
+                databaseTime != null ? "\"" + databaseTime + "\"" : "null"
         );
     }
 }

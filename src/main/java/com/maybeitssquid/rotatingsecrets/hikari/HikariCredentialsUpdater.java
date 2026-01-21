@@ -36,7 +36,7 @@ import com.zaxxer.hikari.util.Credentials;
 public class HikariCredentialsUpdater implements UpdatableCredential<String>, HikariCredentialsProvider {
 
     /** Reference to the HikariCP DataSource, used for connection eviction. May be null during initialization. */
-    private HikariDataSource dataSource;
+    private volatile HikariDataSource dataSource;
 
     /** Current credentials to provide to HikariCP. Replaced atomically on credential updates. */
     private Credentials credentials;

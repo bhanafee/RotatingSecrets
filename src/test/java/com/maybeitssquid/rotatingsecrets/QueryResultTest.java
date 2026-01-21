@@ -36,7 +36,7 @@ class QueryResultTest {
 
         String json = result.toString();
 
-        assertTrue(json.contains("\"dbTime\": \"null\""));
+        assertTrue(json.contains("\"dbTime\": null"));
     }
 
     @Test

@@ -1,5 +1,6 @@
 package com.maybeitssquid.rotatingsecrets.ucp;
 
+import com.maybeitssquid.rotatingsecrets.CredentialRotationException;
 import com.maybeitssquid.rotatingsecrets.UpdatableCredential;
 import oracle.ucp.UniversalConnectionPoolException;
 import oracle.ucp.admin.UniversalConnectionPoolManager;
@@ -72,9 +73,9 @@ public class UcpCredentialsUpdater implements UpdatableCredential<String> {
                     getUniversalConnectionPoolManager();
             mgr.refreshConnectionPool(poolName);
         } catch (final SQLException e) {
-            throw new RuntimeException("Failed to update credentials in poolDataSource " + poolName, e);
+            throw new CredentialRotationException("Failed to update credentials in poolDataSource " + poolName, e);
         } catch (final UniversalConnectionPoolException e) {
-            throw new RuntimeException("Failed to refresh poolDataSource " + poolName, e);
+            throw new CredentialRotationException("Failed to refresh poolDataSource " + poolName, e);
         }
     }
 }

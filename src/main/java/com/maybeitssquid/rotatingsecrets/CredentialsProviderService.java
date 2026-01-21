@@ -8,11 +8,15 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import jakarta.annotation.PostConstruct;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
+import java.nio.file.attribute.PosixFilePermission;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * Service that reads database credentials from Kubernetes-mounted secret files and
@@ -56,10 +60,11 @@ public class CredentialsProviderService {
     /** Path to the file containing the database password. */
     protected final Path passwordPath;
 
-    private String username;
-    private String password;
+    private volatile String username;
+    private volatile String password;
+    private volatile boolean secretsAvailable = false;
 
-    private final List<UpdatableCredential<String>> updatables = new ArrayList<>();
+    private final List<UpdatableCredential<String>> updatables = new CopyOnWriteArrayList<>();
 
     /**
      * Creates a new credentials provider reading from the specified secrets path.
@@ -78,6 +83,39 @@ public class CredentialsProviderService {
     }
 
     /**
+     * Validates file permissions on startup to warn about insecure configurations.
+     *
+     * <p>This method checks if secret files are world-readable and logs a security
+     * warning if they are. On non-POSIX filesystems, this check is skipped.</p>
+     */
+    @PostConstruct
+    public void validateSecretFilePermissions() {
+        checkPermissions(usernamePath);
+        checkPermissions(passwordPath);
+    }
+
+    /**
+     * Checks if a file is world-readable and logs a security warning if so.
+     *
+     * @param path the path to check
+     */
+    private void checkPermissions(Path path) {
+        if (!Files.exists(path)) {
+            return;
+        }
+        try {
+            Set<PosixFilePermission> perms = Files.getPosixFilePermissions(path);
+            if (perms.contains(PosixFilePermission.OTHERS_READ)) {
+                log.warn("SECURITY: {} is world-readable. Recommend chmod 600.", path);
+            }
+        } catch (UnsupportedOperationException e) {
+            // Non-POSIX filesystem, skip check
+        } catch (IOException e) {
+            log.debug("Could not check permissions for {}: {}", path, e.getMessage());
+        }
+    }
+
+    /**
      * Scheduled task that periodically checks for credential changes.
      *
      * <p>This method reads the current credentials from the mounted secret files and
@@ -90,14 +128,26 @@ public class CredentialsProviderService {
      */
     @Scheduled(fixedDelayString = "${k8s.secrets.refreshInterval:30000}")
     public void refreshCredentials() {
+        if (!Files.exists(usernamePath) || !Files.exists(passwordPath)) {
+            if (secretsAvailable) {
+                log.warn("Credential files no longer available at {}", usernamePath.getParent());
+            }
+            secretsAvailable = false;
+            return;
+        }
+        secretsAvailable = true;
+
         final String newUsername = readSecret(usernamePath, "username");
         final String newPassword = readSecret(passwordPath, "password");
 
-        boolean changed = !newUsername.equals(this.username) || !newPassword.equals(this.password);
-        if (changed) {
-            this.username = newUsername;
-            this.password = newPassword;
-            updateCredentials();
+        // Synchronize compare-and-swap to ensure atomic read-compare-write
+        synchronized (this) {
+            boolean changed = !newUsername.equals(this.username) || !newPassword.equals(this.password);
+            if (changed) {
+                this.username = newUsername;
+                this.password = newPassword;
+                updateCredentials();
+            }
         }
     }
 

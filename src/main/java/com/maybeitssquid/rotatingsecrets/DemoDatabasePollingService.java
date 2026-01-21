@@ -37,18 +37,18 @@ public class DemoDatabasePollingService {
     }
 
     /**
-     * Polls the database every 5 seconds.
+     * Polls the database at the slow interval (default: every 5 seconds).
      */
-    @Scheduled(fixedRate = 5000)
-    public void pollEveryFiveSeconds() {
+    @Scheduled(fixedRateString = "${demo.polling.interval.slow:5000}")
+    public void pollSlow() {
         executeQuery("5-second-poller");
     }
 
     /**
-     * Polls the database every 3 seconds.
+     * Polls the database at the fast interval (default: every 3 seconds).
      */
-    @Scheduled(fixedRate = 3000)
-    public void pollEveryThreeSeconds() {
+    @Scheduled(fixedRateString = "${demo.polling.interval.fast:3000}")
+    public void pollFast() {
         executeQuery("3-second-poller");
     }
 
