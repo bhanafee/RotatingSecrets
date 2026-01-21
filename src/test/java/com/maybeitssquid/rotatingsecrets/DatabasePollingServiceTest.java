@@ -52,7 +52,7 @@ class DatabasePollingServiceTest {
 
         verify(dataSource).getConnection();
         String output = outputCapture.toString();
-        assertTrue(output.contains("\"thread\": \"slow-poller\""));
+        assertTrue(output.contains("\"thread\": \"5-second-poller\""));
     }
 
     @Test
@@ -61,7 +61,7 @@ class DatabasePollingServiceTest {
 
         verify(dataSource).getConnection();
         String output = outputCapture.toString();
-        assertTrue(output.contains("\"thread\": \"fast-poller\""));
+        assertTrue(output.contains("\"thread\": \"3-second-poller\""));
     }
 
     @Test
