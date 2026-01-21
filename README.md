@@ -20,32 +20,170 @@ When running in Kubernetes with a secrets manager (HashiCorp Vault, OpenBao, Ext
 
 ## Architecture
 
+### Component Overview
+
+```mermaid
+flowchart TB
+    subgraph K8s["Kubernetes Environment"]
+        subgraph Secrets["Secrets Manager"]
+            Vault["HashiCorp Vault / OpenBao / ESO"]
+        end
+
+        subgraph Volume["Mounted Volume"]
+            SecretFiles["/var/run/secrets/database/<br/>├── username<br/>└── password"]
+        end
+
+        Vault -->|"writes credentials"| SecretFiles
+
+        subgraph App["Spring Boot Application"]
+            CPS["CredentialsProviderService<br/><i>Reads secrets, detects changes</i>"]
+
+            subgraph Updaters["Credential Updaters"]
+                HCU["HikariCredentialsUpdater<br/><i>Stores creds, soft evicts</i>"]
+                UCU["UcpCredentialsUpdater<br/><i>Updates pool, refreshes</i>"]
+            end
+
+            subgraph Pools["Connection Pools"]
+                HDS["HikariDataSource<br/><i>(Primary)</i>"]
+                PDS["PoolDataSource<br/><i>(Oracle UCP)</i>"]
+            end
+
+            SecretFiles -->|"polls every 30s"| CPS
+            CPS -->|"notifies on change"| HCU
+            CPS -->|"notifies on change"| UCU
+            HCU --> HDS
+            UCU --> PDS
+        end
+    end
+
+    subgraph DB["Database"]
+        Database[("PostgreSQL /<br/>Oracle RAC")]
+    end
+
+    HDS --> Database
+    PDS --> Database
 ```
-┌─────────────────────────────────────────────────────────────────────┐
-│                    CredentialsProviderService                        │
-│                   (Reads secrets, detects changes)                   │
-└──────────────────────────────┬──────────────────────────────────────┘
-                               │
-                               │ notifies on change
-                               ▼
-┌─────────────────────────────────────────────────────────────────────┐
-│                      UpdatableCredential<T>                          │
-│                         (Interface)                                  │
-└──────────────────────────────┬──────────────────────────────────────┘
-                               │
-              ┌────────────────┴────────────────┐
-              ▼                                 ▼
-┌─────────────────────────┐       ┌─────────────────────────┐
-│ HikariCredentialsUpdater│       │  UcpCredentialsUpdater  │
-│  - Updates Credentials  │       │  - Updates Credentials  │
-│  - Soft evicts conns    │       │  - Refreshes pool       │
-└─────────────────────────┘       └─────────────────────────┘
-              │                                 │
-              ▼                                 ▼
-┌─────────────────────────┐       ┌─────────────────────────┐
-│    HikariDataSource     │       │     PoolDataSource      │
-│      (Primary)          │       │      (Oracle UCP)       │
-└─────────────────────────┘       └─────────────────────────┘
+
+### Credential Rotation Sequence
+
+```mermaid
+sequenceDiagram
+    participant VA as Vault Agent
+    participant SF as Secret Files
+    participant CPS as CredentialsProviderService
+    participant CU as CredentialsUpdater
+    participant Pool as Connection Pool
+    participant DB as Database
+
+    VA->>SF: Write new credentials
+
+    loop Every 30 seconds
+        CPS->>SF: Poll for changes
+        SF-->>CPS: Return file contents
+    end
+
+    CPS->>CPS: Detect credential change
+    CPS->>CU: setCredential(username, password)
+
+    alt HikariCP
+        CU->>Pool: Update credentials
+        CU->>Pool: softEvictConnections()
+        Pool->>Pool: Mark existing connections<br/>for closure on return
+    else Oracle UCP
+        CU->>Pool: setUser() / setPassword()
+        CU->>Pool: refreshConnectionPool()
+        Pool->>Pool: Gracefully replace<br/>connections
+    end
+
+    Pool->>DB: New connections use<br/>updated credentials
+```
+
+### Class Diagram
+
+```mermaid
+classDiagram
+    class UpdatableCredential~T~ {
+        <<interface>>
+        +setCredential(username: String, credential: T) void
+    }
+
+    class HikariCredentialsProvider {
+        <<interface>>
+        +getCredentials() Credentials
+    }
+
+    class CredentialsProviderService {
+        -usernamePath: Path
+        -passwordPath: Path
+        -username: String
+        -password: String
+        -updatables: List~UpdatableCredential~
+        +refreshCredentials() void
+        +updateCredentials() void
+    }
+
+    class HikariCredentialsUpdater {
+        -dataSource: HikariDataSource
+        -credentials: Credentials
+        +setCredential(username, credential) void
+        +getCredentials() Credentials
+        +setDataSource(dataSource) void
+    }
+
+    class UcpCredentialsUpdater {
+        -poolDataSource: PoolDataSource
+        +setCredential(username, credential) void
+    }
+
+    class HikariDataSource {
+        +getHikariPoolMXBean() HikariPoolMXBean
+    }
+
+    class PoolDataSource {
+        +setUser(user) void
+        +setPassword(password) void
+    }
+
+    UpdatableCredential <|.. HikariCredentialsUpdater : implements
+    UpdatableCredential <|.. UcpCredentialsUpdater : implements
+    HikariCredentialsProvider <|.. HikariCredentialsUpdater : implements
+
+    CredentialsProviderService --> UpdatableCredential : notifies
+    HikariCredentialsUpdater --> HikariDataSource : manages
+    UcpCredentialsUpdater --> PoolDataSource : manages
+```
+
+### Deployment Architecture
+
+```mermaid
+flowchart LR
+    subgraph Cluster["Kubernetes Cluster"]
+        subgraph NS["Application Namespace"]
+            subgraph Pod["Application Pod"]
+                Init["Init Container<br/><i>Vault Agent</i>"]
+                App["App Container<br/><i>Spring Boot</i>"]
+                Vol[("Shared Volume<br/>/var/run/secrets")]
+
+                Init -->|"writes"| Vol
+                Vol -->|"reads"| App
+            end
+        end
+
+        subgraph Vault["Vault Namespace"]
+            VaultServer["Vault Server"]
+            DBSecrets["Database Secrets<br/>Engine"]
+        end
+
+        Init <-->|"authenticates &<br/>fetches secrets"| VaultServer
+        VaultServer --> DBSecrets
+    end
+
+    subgraph External["External"]
+        DB[("Database<br/>Server")]
+    end
+
+    DBSecrets <-->|"rotates credentials"| DB
+    App -->|"connects with<br/>current credentials"| DB
 ```
 
 ## Prerequisites
