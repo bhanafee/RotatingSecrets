@@ -47,26 +47,26 @@ class DatabasePollingServiceTest {
     }
 
     @Test
-    void pollEveryFiveSeconds_executesQuery() throws SQLException {
-        service.pollEveryFiveSeconds();
+    void pollSlow_executesQuery() throws SQLException {
+        service.pollSlow();
 
         verify(dataSource).getConnection();
         String output = outputCapture.toString();
-        assertTrue(output.contains("\"thread\": \"5-second-poller\""));
+        assertTrue(output.contains("\"thread\": \"slow-poller\""));
     }
 
     @Test
-    void pollEveryThreeSeconds_executesQuery() throws SQLException {
-        service.pollEveryThreeSeconds();
+    void pollFast_executesQuery() throws SQLException {
+        service.pollFast();
 
         verify(dataSource).getConnection();
         String output = outputCapture.toString();
-        assertTrue(output.contains("\"thread\": \"3-second-poller\""));
+        assertTrue(output.contains("\"thread\": \"fast-poller\""));
     }
 
     @Test
     void poll_outputsJsonFormat() throws SQLException {
-        service.pollEveryFiveSeconds();
+        service.pollSlow();
 
         String output = outputCapture.toString();
         assertTrue(output.contains("\"thread\":"));
@@ -81,7 +81,7 @@ class DatabasePollingServiceTest {
 
         DemoDatabasePollingService failingService = new DemoDatabasePollingService(failingDataSource);
 
-        assertDoesNotThrow(failingService::pollEveryFiveSeconds);
+        assertDoesNotThrow(failingService::pollSlow);
     }
 
     @Test
@@ -93,7 +93,7 @@ class DatabasePollingServiceTest {
         when(mockStatement.executeQuery(anyString())).thenThrow(new SQLException("Query failed"));
 
         DemoDatabasePollingService mockService = new DemoDatabasePollingService(dataSource);
-        mockService.pollEveryFiveSeconds();
+        mockService.pollSlow();
 
         verify(mockConnection).close();
     }

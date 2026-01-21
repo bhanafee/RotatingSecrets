@@ -58,7 +58,7 @@ class RotatingSecretsApplicationTests {
 
     @Test
     void pollingService_canExecuteWithoutError() {
-        assertDoesNotThrow(() -> pollingService.pollEveryFiveSeconds());
-        assertDoesNotThrow(() -> pollingService.pollEveryThreeSeconds());
+        assertDoesNotThrow(() -> pollingService.pollSlow());
+        assertDoesNotThrow(() -> pollingService.pollFast());
     }
 }
