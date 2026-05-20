@@ -10,7 +10,7 @@ description = 'RotatingSecrets'
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
+        languageVersion = JavaLanguageVersion.of(libs.versions.java.get())
     }
 }
 
@@ -19,9 +19,7 @@ repositories {
 }
 
 dependencies {
-    implementation libs.spring.boot.starter.data.jpa
-    implementation libs.spring.cloud.starter.circuitbreaker.resilience4j
-    implementation libs.spring.cloud.starter.vault.config
+    implementation libs.bundles.spring.starters
 
     // Demo database
     runtimeOnly libs.h2
