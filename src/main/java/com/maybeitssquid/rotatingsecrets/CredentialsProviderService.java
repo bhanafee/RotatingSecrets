@@ -1,5 +1,13 @@
 package com.maybeitssquid.rotatingsecrets;
 
+import jakarta.annotation.PostConstruct;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.attribute.PosixFilePermission;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,42 +16,38 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import jakarta.annotation.PostConstruct;
-
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.attribute.PosixFilePermission;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.CopyOnWriteArrayList;
-
 /**
- * Service that reads database credentials from Kubernetes-mounted secret files and
- * notifies registered {@link UpdatableCredential} components when credentials change.
+ * Service that reads database credentials from Kubernetes-mounted secret files and notifies
+ * registered {@link UpdatableCredential} components when credentials change.
  *
- * <p>This service implements the credential rotation pattern for Kubernetes environments.
- * It periodically reads username and password from files in a configurable directory
- * (typically mounted by a secrets manager like HashiCorp Vault, OpenBao, or the
- * External Secrets Operator). When credentials change, all registered connection pools
- * are notified to update their credentials.</p>
+ * <p>This service implements the credential rotation pattern for Kubernetes environments. It
+ * periodically reads username and password from files in a configurable directory (typically
+ * mounted by a secrets manager like HashiCorp Vault, OpenBao, or the External Secrets Operator).
+ * When credentials change, all registered connection pools are notified to update their
+ * credentials.
  *
  * <h2>File Structure</h2>
- * <p>The service expects the following files in the secrets directory:</p>
+ *
+ * <p>The service expects the following files in the secrets directory:
+ *
  * <ul>
- *   <li>{@code username} - Contains the database username</li>
- *   <li>{@code password} - Contains the database password</li>
+ *   <li>{@code username} - Contains the database username
+ *   <li>{@code password} - Contains the database password
  * </ul>
  *
  * <h2>Configuration Properties</h2>
+ *
  * <ul>
- *   <li>{@code k8s.secrets.path} - Base directory for secret files (default: {@code /var/run/secrets/database})</li>
- *   <li>{@code k8s.secrets.refreshInterval} - Interval in milliseconds between credential checks (default: 30000)</li>
+ *   <li>{@code k8s.secrets.path} - Base directory for secret files (default: {@code
+ *       /var/run/secrets/database})
+ *   <li>{@code k8s.secrets.refreshInterval} - Interval in milliseconds between credential checks
+ *       (default: 30000)
  * </ul>
  *
  * <h2>Thread Safety</h2>
- * <p>This service is thread-safe. Credential reads and updates are performed atomically,
- * and the list of updatable components is safely managed.</p>
+ *
+ * <p>This service is thread-safe. Credential reads and updates are performed atomically, and the
+ * list of updatable components is safely managed.
  *
  * @see UpdatableCredential
  * @see com.maybeitssquid.rotatingsecrets.hikari.HikariCredentialsUpdater
@@ -52,156 +56,154 @@ import java.util.concurrent.CopyOnWriteArrayList;
 @Service("credentialsProvider")
 public class CredentialsProviderService {
 
-    private static final Logger log = LoggerFactory.getLogger(CredentialsProviderService.class);
+  private static final Logger log = LoggerFactory.getLogger(CredentialsProviderService.class);
 
-    /** Path to the file containing the database username. */
-    protected final Path usernamePath;
+  /** Path to the file containing the database username. */
+  protected final Path usernamePath;
 
-    /** Path to the file containing the database password. */
-    protected final Path passwordPath;
+  /** Path to the file containing the database password. */
+  protected final Path passwordPath;
 
-    private volatile String username;
-    private volatile String password;
-    private volatile boolean secretsAvailable = false;
+  private volatile String username;
+  private volatile String password;
+  private volatile boolean secretsAvailable = false;
 
-    private final List<UpdatableCredential<String>> updatables = new CopyOnWriteArrayList<>();
+  private final List<UpdatableCredential<String>> updatables = new CopyOnWriteArrayList<>();
 
-    /**
-     * Creates a new credentials provider reading from the specified secrets path.
-     *
-     * <p>The provider will look for {@code username} and {@code password} files
-     * within the specified directory.</p>
-     *
-     * @param secretsPath base path where Kubernetes mounts the secret files;
-     *                    defaults to {@code /var/run/secrets/database}
-     */
-    public CredentialsProviderService(
-            @Value("${k8s.secrets.path:/var/run/secrets/database}") String secretsPath) {
-        Path basePath = Path.of(secretsPath);
-        this.usernamePath = basePath.resolve("username");
-        this.passwordPath = basePath.resolve("password");
+  /**
+   * Creates a new credentials provider reading from the specified secrets path.
+   *
+   * <p>The provider will look for {@code username} and {@code password} files within the specified
+   * directory.
+   *
+   * @param secretsPath base path where Kubernetes mounts the secret files; defaults to {@code
+   *     /var/run/secrets/database}
+   */
+  public CredentialsProviderService(
+      @Value("${k8s.secrets.path:/var/run/secrets/database}") String secretsPath) {
+    Path basePath = Path.of(secretsPath);
+    this.usernamePath = basePath.resolve("username");
+    this.passwordPath = basePath.resolve("password");
+  }
+
+  /**
+   * Validates file permissions on startup to warn about insecure configurations.
+   *
+   * <p>This method checks if secret files are world-readable and logs a security warning if they
+   * are. On non-POSIX filesystems, this check is skipped.
+   */
+  @PostConstruct
+  public void validateSecretFilePermissions() {
+    checkPermissions(usernamePath);
+    checkPermissions(passwordPath);
+  }
+
+  /**
+   * Checks if a file is world-readable and logs a security warning if so.
+   *
+   * @param path the path to check
+   */
+  private void checkPermissions(Path path) {
+    if (!Files.exists(path)) {
+      return;
     }
-
-    /**
-     * Validates file permissions on startup to warn about insecure configurations.
-     *
-     * <p>This method checks if secret files are world-readable and logs a security
-     * warning if they are. On non-POSIX filesystems, this check is skipped.</p>
-     */
-    @PostConstruct
-    public void validateSecretFilePermissions() {
-        checkPermissions(usernamePath);
-        checkPermissions(passwordPath);
+    try {
+      Set<PosixFilePermission> perms = Files.getPosixFilePermissions(path);
+      if (perms.contains(PosixFilePermission.OTHERS_READ)) {
+        log.warn("SECURITY: {} is world-readable. Recommend chmod 600.", path);
+      }
+    } catch (UnsupportedOperationException e) {
+      // Non-POSIX filesystem, skip check
+    } catch (IOException e) {
+      log.debug("Could not check permissions for {}: {}", path, e.getMessage());
     }
+  }
 
-    /**
-     * Checks if a file is world-readable and logs a security warning if so.
-     *
-     * @param path the path to check
-     */
-    private void checkPermissions(Path path) {
-        if (!Files.exists(path)) {
-            return;
-        }
-        try {
-            Set<PosixFilePermission> perms = Files.getPosixFilePermissions(path);
-            if (perms.contains(PosixFilePermission.OTHERS_READ)) {
-                log.warn("SECURITY: {} is world-readable. Recommend chmod 600.", path);
-            }
-        } catch (UnsupportedOperationException e) {
-            // Non-POSIX filesystem, skip check
-        } catch (IOException e) {
-            log.debug("Could not check permissions for {}: {}", path, e.getMessage());
-        }
+  /**
+   * Scheduled task that periodically checks for credential changes.
+   *
+   * <p>This method reads the current credentials from the mounted secret files and compares them
+   * with the cached values. If either the username or password has changed, it updates the cache
+   * and notifies all registered {@link UpdatableCredential} components.
+   *
+   * <p>The refresh interval is controlled by the {@code k8s.secrets.refreshInterval} property
+   * (default: 30000ms).
+   */
+  @Scheduled(fixedDelayString = "${k8s.secrets.refreshInterval:30000}")
+  public void refreshCredentials() {
+    if (!Files.exists(usernamePath) || !Files.exists(passwordPath)) {
+      if (secretsAvailable) {
+        log.warn("Credential files no longer available at {}", usernamePath.getParent());
+      }
+      secretsAvailable = false;
+      return;
     }
+    secretsAvailable = true;
 
-    /**
-     * Scheduled task that periodically checks for credential changes.
-     *
-     * <p>This method reads the current credentials from the mounted secret files and
-     * compares them with the cached values. If either the username or password has
-     * changed, it updates the cache and notifies all registered
-     * {@link UpdatableCredential} components.</p>
-     *
-     * <p>The refresh interval is controlled by the {@code k8s.secrets.refreshInterval}
-     * property (default: 30000ms).</p>
-     */
-    @Scheduled(fixedDelayString = "${k8s.secrets.refreshInterval:30000}")
-    public void refreshCredentials() {
-        if (!Files.exists(usernamePath) || !Files.exists(passwordPath)) {
-            if (secretsAvailable) {
-                log.warn("Credential files no longer available at {}", usernamePath.getParent());
-            }
-            secretsAvailable = false;
-            return;
-        }
-        secretsAvailable = true;
+    final String newUsername = readSecret(usernamePath, "username");
+    final String newPassword = readSecret(passwordPath, "password");
 
-        final String newUsername = readSecret(usernamePath, "username");
-        final String newPassword = readSecret(passwordPath, "password");
-
-        // Synchronize compare-and-swap to ensure atomic read-compare-write
-        synchronized (this) {
-            boolean changed = !newUsername.equals(this.username) || !newPassword.equals(this.password);
-            if (changed) {
-                this.username = newUsername;
-                this.password = newPassword;
-                updateCredentials();
-            }
-        }
+    // Synchronize compare-and-swap to ensure atomic read-compare-write
+    synchronized (this) {
+      boolean changed = !newUsername.equals(this.username) || !newPassword.equals(this.password);
+      if (changed) {
+        this.username = newUsername;
+        this.password = newPassword;
+        updateCredentials();
+      }
     }
+  }
 
-    /**
-     * Registers the HikariCP credentials updater to receive credential change notifications.
-     *
-     * @param updatable the HikariCP credentials updater bean
-     */
-    @Autowired
-    @Qualifier("hikariUpdater")
-    public void setHikariUpdatable(UpdatableCredential<String> updatable) {
-        this.updatables.add(updatable);
-    }
+  /**
+   * Registers the HikariCP credentials updater to receive credential change notifications.
+   *
+   * @param updatable the HikariCP credentials updater bean
+   */
+  @Autowired
+  @Qualifier("hikariUpdater")
+  public void setHikariUpdatable(UpdatableCredential<String> updatable) {
+    this.updatables.add(updatable);
+  }
 
-    /**
-     * Registers the Oracle UCP credentials updater to receive credential change notifications.
-     *
-     * @param updatable the Oracle UCP credentials updater bean
-     */
-    @Autowired
-    @Qualifier("ucpUpdater")
-    public void setUcpUpdatable(UpdatableCredential<String> updatable) {
-        this.updatables.add(updatable);
-    }
+  /**
+   * Registers the Oracle UCP credentials updater to receive credential change notifications.
+   *
+   * @param updatable the Oracle UCP credentials updater bean
+   */
+  @Autowired
+  @Qualifier("ucpUpdater")
+  public void setUcpUpdatable(UpdatableCredential<String> updatable) {
+    this.updatables.add(updatable);
+  }
 
-    /**
-     * Notifies all registered {@link UpdatableCredential} components of the current credentials.
-     *
-     * <p>This method iterates through all registered updatable components and calls
-     * {@link UpdatableCredential#setCredential(String, Object)} with the current
-     * username and password. Each component is responsible for its own thread-safe
-     * credential update logic.</p>
-     */
-    public void updateCredentials() {
-        for (UpdatableCredential<String> updatable : updatables) {
-            updatable.setCredential(this.username, this.password);
-        }
+  /**
+   * Notifies all registered {@link UpdatableCredential} components of the current credentials.
+   *
+   * <p>This method iterates through all registered updatable components and calls {@link
+   * UpdatableCredential#setCredential(String, Object)} with the current username and password. Each
+   * component is responsible for its own thread-safe credential update logic.
+   */
+  public void updateCredentials() {
+    for (UpdatableCredential<String> updatable : updatables) {
+      updatable.setCredential(this.username, this.password);
     }
+  }
 
-    /**
-     * Reads and trims a secret value from a file.
-     *
-     * @param path the path to the secret file
-     * @param name a descriptive name for logging purposes
-     * @return the trimmed content of the secret file
-     * @throws RuntimeException if the file cannot be read
-     */
-    private String readSecret(Path path, String name) {
-        try {
-            String value = Files.readString(path).trim();
-            log.debug("Read {} from Kubernetes secrets", name);
-            return value;
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to read " + name + " from " + path, e);
-        }
+  /**
+   * Reads and trims a secret value from a file.
+   *
+   * @param path the path to the secret file
+   * @param name a descriptive name for logging purposes
+   * @return the trimmed content of the secret file
+   * @throws RuntimeException if the file cannot be read
+   */
+  private String readSecret(Path path, String name) {
+    try {
+      String value = Files.readString(path).trim();
+      log.debug("Read {} from Kubernetes secrets", name);
+      return value;
+    } catch (IOException e) {
+      throw new RuntimeException("Failed to read " + name + " from " + path, e);
     }
+  }
 }

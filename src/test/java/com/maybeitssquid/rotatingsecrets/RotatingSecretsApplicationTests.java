@@ -1,64 +1,56 @@
 package com.maybeitssquid.rotatingsecrets;
 
+import static org.junit.jupiter.api.Assertions.*;
+
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import javax.sql.DataSource;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-
-import static org.junit.jupiter.api.Assertions.*;
-
-/**
- * Integration tests using H2 in-memory database.
- */
+/** Integration tests using H2 in-memory database. */
 @SpringBootTest(
-        classes = {DemoDatabasePollingService.class},
-        properties = {
-                "spring.cloud.vault.enabled=false"
-        }
-)
+    classes = {DemoDatabasePollingService.class},
+    properties = {"spring.cloud.vault.enabled=false"})
 @EnableAutoConfiguration
 class RotatingSecretsApplicationTests {
 
-    @Autowired
-    private DataSource dataSource;
+  @Autowired private DataSource dataSource;
 
-    @Autowired
-    private DemoDatabasePollingService pollingService;
+  @Autowired private DemoDatabasePollingService pollingService;
 
-    @Test
-    void contextLoads() {
-        assertNotNull(dataSource);
-        assertNotNull(pollingService);
+  @Test
+  void contextLoads() {
+    assertNotNull(dataSource);
+    assertNotNull(pollingService);
+  }
+
+  @Test
+  void dataSource_isConnectable() throws SQLException {
+    try (Connection conn = dataSource.getConnection()) {
+      assertNotNull(conn);
+      assertFalse(conn.isClosed());
     }
+  }
 
-    @Test
-    void dataSource_isConnectable() throws SQLException {
-        try (Connection conn = dataSource.getConnection()) {
-            assertNotNull(conn);
-            assertFalse(conn.isClosed());
-        }
+  @Test
+  void dataSource_canExecuteQueries() throws SQLException {
+    try (Connection conn = dataSource.getConnection();
+        Statement stmt = conn.createStatement();
+        ResultSet rs = stmt.executeQuery("SELECT 1")) {
+
+      assertTrue(rs.next());
+      assertEquals(1, rs.getInt(1));
     }
+  }
 
-    @Test
-    void dataSource_canExecuteQueries() throws SQLException {
-        try (Connection conn = dataSource.getConnection();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery("SELECT 1")) {
-
-            assertTrue(rs.next());
-            assertEquals(1, rs.getInt(1));
-        }
-    }
-
-    @Test
-    void pollingService_canExecuteWithoutError() {
-        assertDoesNotThrow(() -> pollingService.pollSlow());
-        assertDoesNotThrow(() -> pollingService.pollFast());
-    }
+  @Test
+  void pollingService_canExecuteWithoutError() {
+    assertDoesNotThrow(() -> pollingService.pollSlow());
+    assertDoesNotThrow(() -> pollingService.pollFast());
+  }
 }
