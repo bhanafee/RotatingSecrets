@@ -1,3 +1,9 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+}
+
 plugins {
     id 'java'
     alias libs.plugins.spring.boot
@@ -21,6 +27,11 @@ repositories {
 }
 
 dependencies {
+    constraints {
+        libs.bundles.security.patches.get().each {
+            add('implementation', it)
+        }
+    }
     implementation libs.bundles.spring.starters
 
     // Demo database

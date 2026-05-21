@@ -20,7 +20,11 @@ oracle-ucp = { module = "com.oracle.database.jdbc:ucp" }
 oracle-ojdbc = { module = "com.oracle.database.jdbc:ojdbc11" }
 junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
 
+# Security patches - BouncyCastle (1.84 fixes CVE-2026-5598 timing channel and CVE-2026-0636 LDAP injection)
+patch-cve-2026-5598-bcprov = { module = "org.bouncycastle:bcprov-jdk18on", version = { strictly = "[1.84,)", prefer = "1.84" } }
+
 [bundles]
+security-patches = ["patch-cve-2026-5598-bcprov"]
 spring-starters = [
     "spring-boot-starter-data-jpa",
     "spring-cloud-starter-circuitbreaker-resilience4j",
