@@ -20,12 +20,21 @@ oracle-ucp = { module = "com.oracle.database.jdbc:ucp" }
 oracle-ojdbc = { module = "com.oracle.database.jdbc:ojdbc11" }
 junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
 
-# Security patches - BouncyCastle (1.84 fixes CVE-2026-5598 timing channel and CVE-2026-0636 LDAP injection)
+# Security patches - BouncyCastle (CVE-2026-5598 covers all prior bcprov/bcpg CVEs)
 patch-cve-2026-5598-bcpg = { module = "org.bouncycastle:bcpg-jdk18on", version = { strictly = "[1.84,)", prefer = "1.84" } }
 patch-cve-2026-5598-bcprov = { module = "org.bouncycastle:bcprov-jdk18on", version = { strictly = "[1.84,)", prefer = "1.84" } }
 
+# Security patches - Apache Commons
+patch-cve-2025-48734 = { module = "commons-beanutils:commons-beanutils", version = { strictly = "[1.11.0,)", prefer = "1.11.0" } }
+patch-cve-2025-48924 = { module = "org.apache.commons:commons-lang3", version = { strictly = "[3.18.0,)", prefer = "3.18.0" } }
+
+# Security patches - Other
+patch-cve-2022-45868 = { module = "com.h2database:h2", version = { strictly = "[2.2.220,)", prefer = "2.2.220" } }
+patch-cve-2025-4949 = { module = "org.eclipse.jgit:org.eclipse.jgit", version = { strictly = "[6.10.1.202505221210-r,)", prefer = "6.10.1.202505221210-r" } }
+patch-ghsa-72hv-8253-57qq = { module = "com.fasterxml.jackson.core:jackson-core", version = { strictly = "[2.21.1,)", prefer = "2.21.1" } }
+
 [bundles]
-security-patches = ["patch-cve-2026-5598-bcpg", "patch-cve-2026-5598-bcprov"]
+security-patches = ["patch-cve-2022-45868", "patch-cve-2025-4949", "patch-cve-2025-48734", "patch-cve-2025-48924", "patch-cve-2026-5598-bcpg", "patch-cve-2026-5598-bcprov", "patch-ghsa-72hv-8253-57qq"]
 spring-starters = [
     "spring-boot-starter-data-jpa",
     "spring-cloud-starter-circuitbreaker-resilience4j",
