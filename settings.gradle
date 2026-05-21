@@ -1,4 +1,4 @@
-rootProject.name = 'rotatingsecrets'
+rootProject.name = 'RotatingSecrets'
 
 gradle.beforeProject { proj ->
     if (proj == proj.rootProject) {
