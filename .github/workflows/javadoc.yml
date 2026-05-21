@@ -24,7 +24,7 @@ jobs:
         uses: MathieuSoysal/Javadoc-publisher.yml@v3.0.2
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          java-version: 17
+          java-version: 21
           project: gradle
           target-folder: javadoc
           deploy-mode: artifact
