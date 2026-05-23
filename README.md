@@ -2,6 +2,11 @@
 
 A Spring Boot application demonstrating zero-downtime database credential rotation in Kubernetes environments. The application supports both HikariCP and Oracle Universal Connection Pool (UCP), reading fresh credentials from Kubernetes-mounted secret files and seamlessly updating connection pools when passwords are rotated.
 
+## Links
+
+- [GitHub repository](https://github.com/bhanafee/RotatingSecrets)
+- [Javadoc](https://bhanafee.github.io/RotatingSecrets/javadoc/)
+
 ## Overview
 
 When running in Kubernetes with a secrets manager (HashiCorp Vault, OpenBao, External Secrets Operator), database credentials can be automatically rotated. This application demonstrates how to integrate connection pools with dynamic credentials through a publisher-subscriber pattern that notifies pools when credentials change.
