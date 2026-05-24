@@ -49,6 +49,10 @@ jobs:
             --lua-filter .github/pandoc/mermaid.lua \
             --include-after-body .github/pandoc/mermaid-init.html \
             --output _site/index.html
+          pandoc CODE_OF_CONDUCT.md \
+            --standalone \
+            --metadata title="Code of Conduct" \
+            --output _site/CODE_OF_CONDUCT.html
 
       - name: Copy Javadoc
         run: |

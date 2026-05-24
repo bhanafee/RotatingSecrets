@@ -7,6 +7,7 @@ A Spring Boot application demonstrating zero-downtime database credential rotati
 - [GitHub repository](https://github.com/bhanafee/RotatingSecrets)
 - [Javadoc](https://bhanafee.github.io/RotatingSecrets/javadoc/)
 - [Apache 2.0 License](https://bhanafee.github.io/RotatingSecrets/LICENSE)
+- [Code of Conduct](https://bhanafee.github.io/RotatingSecrets/CODE_OF_CONDUCT.html)
 
 ## Overview
 
