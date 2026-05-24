@@ -203,18 +203,26 @@ flowchart LR
 ## Project Structure
 
 ```
-src/main/java/com/maybeitssquid/rotatingsecrets/
-├── DemoRotatingSecretsApplication.java    # Entry point with scheduling enabled
-├── CredentialsProviderService.java        # Reads secrets, notifies pools on change
-├── UpdatableCredential.java               # Interface for credential update notification
-├── DemoDatabasePollingService.java        # Demo: exercises connection pool
-├── DemoQueryResult.java                   # Demo: query result model
-├── hikari/
-│   ├── HikariDataSourceConfig.java        # HikariCP configuration (primary)
-│   └── HikariCredentialsUpdater.java      # HikariCP credential rotation handler
-└── ucp/
-    ├── UcpDataSourceConfig.java           # Oracle UCP configuration
-    └── UcpCredentialsUpdater.java         # Oracle UCP credential rotation handler
+rotating-secrets/                          # Reusable library
+└── src/main/java/com/maybeitssquid/rotatingsecrets/
+    ├── UpdatableCredential.java           # Interface for credential update notification
+    ├── CredentialsProviderService.java    # Reads secrets, notifies pools on change
+    ├── CredentialRotationException.java   # Exception for rotation failures
+    ├── hikari/
+    │   ├── HikariCredentialsUpdater.java  # HikariCP credential rotation handler
+    │   └── HikariDataSourceConfig.java    # HikariCP configuration (primary)
+    └── ucp/
+        ├── UcpCredentialsUpdater.java     # Oracle UCP credential rotation handler
+        └── UcpDataSourceConfig.java       # Oracle UCP configuration
+
+demo/                                      # Spring Boot demo application
+└── src/main/
+    ├── java/com/maybeitssquid/rotatingsecrets/
+    │   ├── DemoRotatingSecretsApplication.java  # Entry point with scheduling enabled
+    │   ├── DemoDatabasePollingService.java      # Exercises the connection pool
+    │   └── DemoQueryResult.java                 # Query result model
+    └── resources/
+        └── application.properties         # Datasource and pool configuration
 ```
 
 ## Configuration
