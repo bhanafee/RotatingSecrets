@@ -39,4 +39,4 @@ jobs:
         if: always()
         with:
           name: test-results-java-${{ matrix.java }}
-          path: build/reports/tests/
+          path: '**/build/reports/tests/'

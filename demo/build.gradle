@@ -1,0 +1,14 @@
+apply plugin: 'org.springframework.boot'
+
+dependencies {
+    implementation project(':rotating-secrets')
+    implementation libs.spring.cloud.starter.circuitbreaker.resilience4j
+    implementation libs.spring.cloud.starter.vault.config
+    runtimeOnly libs.h2
+}
+
+dependencyManagement {
+    imports {
+        mavenBom libs.spring.cloud.dependencies.get().toString()
+    }
+}

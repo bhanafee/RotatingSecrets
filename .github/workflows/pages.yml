@@ -62,8 +62,9 @@ jobs:
 
       - name: Copy Javadoc
         run: |
-          mkdir -p _site/javadoc
-          cp -r build/docs/javadoc/. _site/javadoc/
+          mkdir -p _site/javadoc/rotating-secrets _site/javadoc/demo
+          cp -r rotating-secrets/build/docs/javadoc/. _site/javadoc/rotating-secrets/
+          cp -r demo/build/docs/javadoc/. _site/javadoc/demo/
           cp LICENSE _site/
 
       - name: Upload Pages artifact

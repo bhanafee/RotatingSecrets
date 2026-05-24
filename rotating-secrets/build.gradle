@@ -1,0 +1,13 @@
+dependencies {
+    implementation libs.spring.boot.starter.data.jpa
+    implementation libs.oracle.ucp
+    runtimeOnly libs.oracle.ojdbc
+}
+
+testing {
+    suites.test {
+        dependencies {
+            runtimeOnly libs.h2
+        }
+    }
+}

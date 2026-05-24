@@ -5,69 +5,77 @@ buildscript {
 }
 
 plugins {
-    id 'java'
-    alias(libs.plugins.spring.boot)
-    alias(libs.plugins.spring.dependency.management)
-    alias(libs.plugins.spotless)
-    alias(libs.plugins.owasp.dependencycheck)
+    alias(libs.plugins.spring.boot) apply false
+    alias(libs.plugins.spring.dependency.management) apply false
+    alias(libs.plugins.spotless) apply false
+    alias(libs.plugins.owasp.dependencycheck) apply false
 }
 
-group = 'com.maybeitssquid'
-version = '0.0.1-SNAPSHOT'
-description = 'RotatingSecrets'
+subprojects {
+    apply plugin: 'java-library'
+    apply plugin: 'jvm-test-suite'
+    apply plugin: 'io.spring.dependency-management'
+    apply plugin: 'com.diffplug.spotless'
+    apply plugin: 'org.owasp.dependencycheck'
 
-repositories {
-    mavenCentral()
-}
+    group = 'com.maybeitssquid'
+    version = '0.0.1-SNAPSHOT'
 
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(libs.versions.java.get())
+    repositories {
+        mavenCentral()
     }
-}
 
-dependencies {
-    constraints {
-        libs.bundles.security.patches.get().each {
-            add('implementation', it)
+    dependencyManagement {
+        imports {
+            mavenBom "org.springframework.boot:spring-boot-dependencies:${libs.versions.spring.boot.get()}"
         }
     }
-    implementation libs.bundles.spring.starters
 
-    // Demo database
-    runtimeOnly libs.h2
-
-    // Oracle UCP and JDBC driver
-    implementation libs.oracle.ucp
-    runtimeOnly libs.oracle.ojdbc
-}
-
-dependencyManagement {
-    imports {
-        mavenBom libs.spring.cloud.dependencies.get().toString()
-    }
-}
-
-testing {
-    suites.test {
-        useJUnitJupiter()
-        dependencies {
-            implementation libs.spring.boot.starter.test
-            runtimeOnly libs.junit.platform.launcher
-        }
-    }
-}
-
-spotless {
     java {
-        targetExclude 'src/*/java/module-info.java'
-        googleJavaFormat()
-        removeUnusedImports()
-        trimTrailingWhitespace()
-        endWithNewline()
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(libs.versions.java.get())
+        }
+        withSourcesJar()
+        withJavadocJar()
     }
-}
 
-dependencyCheck {
-    failBuildOnCVSS = 7
+    dependencies {
+        constraints {
+            libs.bundles.security.patches.get().each {
+                add('implementation', it)
+            }
+        }
+    }
+
+    testing {
+        suites.test {
+            useJUnitJupiter()
+            dependencies {
+                implementation libs.spring.boot.starter.test
+                runtimeOnly libs.junit.platform.launcher
+            }
+        }
+    }
+
+    spotless {
+        java {
+            targetExclude 'src/*/java/module-info.java'
+            googleJavaFormat()
+            removeUnusedImports()
+            trimTrailingWhitespace()
+            endWithNewline()
+        }
+    }
+
+    dependencyCheck {
+        failBuildOnCVSS = 7
+    }
+
+    tasks.withType(Javadoc).configureEach {
+        options {
+            encoding = 'UTF-8'
+            links "https://docs.oracle.com/en/java/javase/${libs.versions.java.get()}/docs/api/"
+            addBooleanOption('html5', true)
+        }
+    }
 }
