@@ -363,7 +363,3 @@ The project includes unit tests using H2 in-memory database:
 - **RBAC**: Ensure the pod has read permissions on mounted secret volumes
 - **FAN Events**: For Oracle RAC, enable FAN in UCP configuration
 - **Credential Refresh Interval**: Tune `k8s.secrets.refreshInterval` based on your rotation frequency
-
-## License
-
-Apache 2.0
