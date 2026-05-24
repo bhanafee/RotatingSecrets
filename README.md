@@ -365,4 +365,4 @@ The project includes unit tests using H2 in-memory database:
 
 ## License
 
-MIT License
+Apache 2.0
