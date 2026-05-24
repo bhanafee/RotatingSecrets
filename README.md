@@ -1,6 +1,6 @@
 # RotatingSecrets
 
-A Spring Boot application demonstrating zero-downtime database credential rotation in Kubernetes environments. The application supports both HikariCP and Oracle Universal Connection Pool (UCP), reading fresh credentials from Kubernetes-mounted secret files and seamlessly updating connection pools when passwords are rotated.
+A library and demo for zero-downtime database credential rotation in Kubernetes environments. The `rotating-secrets` module provides reusable Spring components for HikariCP and Oracle Universal Connection Pool (UCP) that read fresh credentials from Kubernetes-mounted secret files and seamlessly update connection pools when passwords are rotated. The `demo` module is a Spring Boot application that exercises the library.
 
 ## Links
 
@@ -43,7 +43,7 @@ flowchart TB
 
         Vault -->|"writes credentials"| SecretFiles
 
-        subgraph App["Spring Boot Application"]
+        subgraph App["Application (demo + rotating-secrets library)"]
             CPS["CredentialsProviderService<br/><i>Reads secrets, detects changes</i>"]
 
             subgraph Updaters["Credential Updaters"]
@@ -121,8 +121,8 @@ classDiagram
     }
 
     class CredentialsProviderService {
-        -usernamePath: Path
-        -passwordPath: Path
+        #usernamePath: Path
+        #passwordPath: Path
         -username: String
         -password: String
         -updatables: List~UpdatableCredential~
@@ -294,7 +294,7 @@ echo "mypassword" > /tmp/secrets/database/password
 Run with the custom secrets path:
 
 ```bash
-./gradlew bootRun --args='--k8s.secrets.path=/tmp/secrets/database'
+./gradlew :demo:bootRun --args='--k8s.secrets.path=/tmp/secrets/database'
 ```
 
 ### Kubernetes Deployment
@@ -355,14 +355,14 @@ The project includes unit tests using H2 in-memory database:
 
 | Component | Version |
 |-----------|---------|
-| Spring Boot | 4.0.1 |
+| Spring Boot | 4.0.6 |
 | Java | 21 |
 | HikariCP | (via Spring Boot) |
 | Oracle UCP | (via oracle-jdbc) |
 | Oracle JDBC | ojdbc11 |
-| Spring Cloud Vault | 2025.1.0 |
+| Spring Cloud Vault | 2025.1.1 |
 | Resilience4j | (via Spring Cloud) |
-| Gradle | 9.2.1 |
+| Gradle | 9.5.1 |
 
 ## Production Considerations
 
