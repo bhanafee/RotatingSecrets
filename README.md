@@ -10,11 +10,9 @@ A library and demo for zero-downtime database credential rotation in Kubernetes 
 - [Apache 2.0 License](https://bhanafee.github.io/RotatingSecrets/LICENSE)
 - [Code of Conduct](https://bhanafee.github.io/RotatingSecrets/CODE_OF_CONDUCT.html)
 
-## Overview
-
-When running in Kubernetes with a secrets manager (HashiCorp Vault, OpenBao, External Secrets Operator), database credentials can be automatically rotated. This application demonstrates how to integrate connection pools with dynamic credentials through a publisher-subscriber pattern that notifies pools when credentials change.
-
 ## How It Works
+
+When running in Kubernetes with a secrets manager (HashiCorp Vault, OpenBao, External Secrets Operator), database credentials can be automatically rotated. The library uses a publisher-subscriber pattern to notify connection pools when credentials change:
 
 1. **Secret Mounting**: A secrets manager mounts credentials as files in a configurable directory (default: `/var/run/secrets/database/`)
 
@@ -25,54 +23,6 @@ When running in Kubernetes with a secrets manager (HashiCorp Vault, OpenBao, Ext
    - **Oracle UCP**: Updates credentials and refreshes the connection pool
 
 4. **Seamless Rotation**: New connections automatically use updated credentials while existing connections continue unaffected until returned to the pool
-
-## Architecture
-
-### Component Overview
-
-```mermaid
-flowchart TB
-    subgraph K8s["Kubernetes Environment"]
-        subgraph Secrets["Secrets Manager"]
-            Vault["HashiCorp Vault / OpenBao / ESO"]
-        end
-
-        subgraph Volume["Mounted Volume"]
-            SecretFiles["/var/run/secrets/database/<br/>├── username<br/>└── password"]
-        end
-
-        Vault -->|"writes credentials"| SecretFiles
-
-        subgraph App["Application (demo + rotating-secrets library)"]
-            CPS["CredentialsProviderService<br/><i>Reads secrets, detects changes</i>"]
-
-            subgraph Updaters["Credential Updaters"]
-                HCU["HikariCredentialsUpdater<br/><i>Stores creds, soft evicts</i>"]
-                UCU["UcpCredentialsUpdater<br/><i>Updates pool, refreshes</i>"]
-            end
-
-            subgraph Pools["Connection Pools"]
-                HDS["HikariDataSource<br/><i>(Primary)</i>"]
-                PDS["PoolDataSource<br/><i>(Oracle UCP)</i>"]
-            end
-
-            SecretFiles -->|"polls every 30s"| CPS
-            CPS -->|"notifies on change"| HCU
-            CPS -->|"notifies on change"| UCU
-            HCU --> HDS
-            UCU --> PDS
-        end
-    end
-
-    subgraph DB["Database"]
-        Database[("PostgreSQL /<br/>Oracle RAC")]
-    end
-
-    HDS --> Database
-    PDS --> Database
-```
-
-### Credential Rotation Sequence
 
 ```mermaid
 sequenceDiagram
@@ -106,7 +56,9 @@ sequenceDiagram
     Pool->>DB: New connections use<br/>updated credentials
 ```
 
-### Class Diagram
+## Library: rotating-secrets
+
+### API
 
 ```mermaid
 classDiagram
@@ -161,6 +113,79 @@ classDiagram
     UcpCredentialsUpdater --> PoolDataSource : manages
 ```
 
+### Connection Pool Support
+
+| Feature | HikariCP | Oracle UCP |
+|---------|----------|------------|
+| **Default for Spring Boot** | Yes | No |
+| **Oracle-specific features** | No | Yes |
+| **Credential update** | Via CredentialsProvider interface | Direct pool refresh |
+| **Connection eviction** | Soft evict (graceful) | Pool refresh |
+| **FAN support** | No | Yes |
+| **Application Continuity** | No | Yes |
+
+- **HikariCP** is the Spring Boot default and works well with any database. It's lightweight and high-performance.
+- **Oracle UCP** provides Oracle-specific features essential for enterprise deployments:
+  - Fast Application Notification (FAN) for RAC/Data Guard failover
+  - Transparent Application Continuity for request replay
+  - Oracle Wallet integration
+  - Service-aware connections
+
+### Production Considerations
+
+- **Pool Tuning**: Adjust pool sizes based on your workload and database capacity
+- **Monitoring**: Both HikariCP and UCP expose metrics via JMX/MXBeans
+- **Fail-Fast**: The application throws RuntimeException if secrets cannot be read
+- **RBAC**: Ensure the pod has read permissions on mounted secret volumes
+- **FAN Events**: For Oracle RAC, enable FAN in UCP configuration
+- **Credential Refresh Interval**: Tune `k8s.secrets.refreshInterval` based on your rotation frequency
+
+## Architecture
+
+### Component Overview
+
+```mermaid
+flowchart TB
+    subgraph K8s["Kubernetes Environment"]
+        subgraph Secrets["Secrets Manager"]
+            Vault["HashiCorp Vault / OpenBao / ESO"]
+        end
+
+        subgraph Volume["Mounted Volume"]
+            SecretFiles["/var/run/secrets/database/<br/>├── username<br/>└── password"]
+        end
+
+        Vault -->|"writes credentials"| SecretFiles
+
+        subgraph App["Application (demo + rotating-secrets library)"]
+            CPS["CredentialsProviderService<br/><i>Reads secrets, detects changes</i>"]
+
+            subgraph Updaters["Credential Updaters"]
+                HCU["HikariCredentialsUpdater<br/><i>Stores creds, soft evicts</i>"]
+                UCU["UcpCredentialsUpdater<br/><i>Updates pool, refreshes</i>"]
+            end
+
+            subgraph Pools["Connection Pools"]
+                HDS["HikariDataSource<br/><i>(Primary)</i>"]
+                PDS["PoolDataSource<br/><i>(Oracle UCP)</i>"]
+            end
+
+            SecretFiles -->|"polls every 30s"| CPS
+            CPS -->|"notifies on change"| HCU
+            CPS -->|"notifies on change"| UCU
+            HCU --> HDS
+            UCU --> PDS
+        end
+    end
+
+    subgraph DB["Database"]
+        Database[("PostgreSQL /<br/>Oracle RAC")]
+    end
+
+    HDS --> Database
+    PDS --> Database
+```
+
 ### Deployment Architecture
 
 ```mermaid
@@ -194,13 +219,9 @@ flowchart LR
     App -->|"connects with<br/>current credentials"| DB
 ```
 
-## Prerequisites
+## Demo Application
 
-- Java 21
-- Gradle 9.2+
-- Kubernetes cluster with secrets management (for production)
-
-## Project Structure
+### Project Structure
 
 ```
 rotating-secrets/                          # Reusable library
@@ -225,9 +246,13 @@ demo/                                      # Spring Boot demo application
         └── application.properties         # Datasource and pool configuration
 ```
 
-## Configuration
+### Prerequisites
 
-### application.properties
+- Kubernetes cluster with secrets management
+
+### Configuration
+
+#### application.properties
 
 ```properties
 spring.application.name=RotatingSecrets
@@ -264,24 +289,24 @@ spring.datasource.ucp.inactive-connection-timeout=30
 spring.datasource.ucp.max-connection-reuse-time=1800
 ```
 
-### Secret Files
+#### Secret Files
 
-The application expects these files in the secrets directory:
+The demo expects these files in the secrets directory:
 
 | File | Description |
 |------|-------------|
 | `username` | Database username |
 | `password` | Database password |
 
-## Building
+### Building
 
 ```bash
 ./gradlew build
 ```
 
-## Running
+### Running
 
-### Local Development
+#### Local Development
 
 Create the secret files in a local directory:
 
@@ -297,7 +322,7 @@ Run with the custom secrets path:
 ./gradlew :demo:bootRun --args='--k8s.secrets.path=/tmp/secrets/database'
 ```
 
-### Kubernetes Deployment
+#### Kubernetes Deployment
 
 Mount your secrets as a volume at the configured path. Example with Vault Agent:
 
@@ -323,52 +348,21 @@ spec:
       image: rotating-secrets:latest
 ```
 
-## Testing
-
-The project includes unit tests using H2 in-memory database:
+### Testing
 
 ```bash
 ./gradlew test
 ```
 
-## Connection Pool Comparison
-
-| Feature | HikariCP | Oracle UCP |
-|---------|----------|------------|
-| **Default for Spring Boot** | Yes | No |
-| **Oracle-specific features** | No | Yes |
-| **Credential update** | Via CredentialsProvider interface | Direct pool refresh |
-| **Connection eviction** | Soft evict (graceful) | Pool refresh |
-| **FAN support** | No | Yes |
-| **Application Continuity** | No | Yes |
-
-### Why Two Pools?
-
-- **HikariCP** is the Spring Boot default and works well with any database. It's lightweight and high-performance.
-- **Oracle UCP** provides Oracle-specific features essential for enterprise deployments:
-  - Fast Application Notification (FAN) for RAC/Data Guard failover
-  - Transparent Application Continuity for request replay
-  - Oracle Wallet integration
-  - Service-aware connections
-
 ## Technologies
 
 | Component | Version |
 |-----------|---------|
-| Spring Boot | 4.0.6 |
 | Java | 21 |
+| Gradle | 9.5.1 |
+| Spring Boot | 4.0.6 |
+| Spring Cloud Vault | 2025.1.1 |
 | HikariCP | (via Spring Boot) |
+| Resilience4j | (via Spring Cloud) |
 | Oracle UCP | (via oracle-jdbc) |
 | Oracle JDBC | ojdbc11 |
-| Spring Cloud Vault | 2025.1.1 |
-| Resilience4j | (via Spring Cloud) |
-| Gradle | 9.5.1 |
-
-## Production Considerations
-
-- **Pool Tuning**: Adjust pool sizes based on your workload and database capacity
-- **Monitoring**: Both HikariCP and UCP expose metrics via JMX/MXBeans
-- **Fail-Fast**: The application throws RuntimeException if secrets cannot be read
-- **RBAC**: Ensure the pod has read permissions on mounted secret volumes
-- **FAN Events**: For Oracle RAC, enable FAN in UCP configuration
-- **Credential Refresh Interval**: Tune `k8s.secrets.refreshInterval` based on your rotation frequency
