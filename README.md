@@ -9,6 +9,7 @@ A library and demo for zero-downtime database credential rotation in Kubernetes 
 - [Javadoc: demo](https://bhanafee.github.io/RotatingSecrets/javadoc/demo/)
 - [Apache 2.0 License](https://bhanafee.github.io/RotatingSecrets/LICENSE)
 - [Code of Conduct](https://bhanafee.github.io/RotatingSecrets/CODE_OF_CONDUCT.html)
+- [Claude Code Guidance](https://bhanafee.github.io/RotatingSecrets/CLAUDE.html)
 
 ## How It Works
 
