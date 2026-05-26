@@ -359,7 +359,7 @@ spec:
 
 | Component | Version |
 |-----------|---------|
-| Java | 21 |
+| Java | 25 (toolchain; runs on 17+) |
 | Gradle | 9.5.1 |
 | Spring Boot | 4.0.6 |
 | Spring Cloud Vault | 2025.1.1 |
