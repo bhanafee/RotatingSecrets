@@ -39,6 +39,10 @@ subprojects {
         withJavadocJar()
     }
 
+    tasks.withType(JavaCompile).configureEach {
+        options.release = libs.versions.release.get().toInteger()
+    }
+
     dependencies {
         constraints {
             libs.bundles.security.patches.get().each {
