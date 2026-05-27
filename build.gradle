@@ -14,6 +14,7 @@ plugins {
 subprojects {
     apply plugin: 'java-library'
     apply plugin: 'jvm-test-suite'
+    apply plugin: 'jacoco'
     apply plugin: 'io.spring.dependency-management'
     apply plugin: 'com.diffplug.spotless'
     apply plugin: 'org.owasp.dependencycheck'
@@ -58,6 +59,14 @@ subprojects {
                 implementation libs.spring.boot.starter.test
                 runtimeOnly libs.junit.platform.launcher
             }
+        }
+    }
+
+    tasks.named('jacocoTestReport') {
+        dependsOn tasks.named('test')
+        reports {
+            html.required = true
+            xml.required = false
         }
     }
 

@@ -2,15 +2,6 @@
 
 A library and demo for zero-downtime database credential rotation in Kubernetes environments. The `rotating-secrets` module provides reusable Spring components for HikariCP and Oracle Universal Connection Pool (UCP) that read fresh credentials from Kubernetes-mounted secret files and seamlessly update connection pools when passwords are rotated. The `demo` module is a Spring Boot application that exercises the library.
 
-## Links
-
-- [GitHub repository](https://github.com/bhanafee/RotatingSecrets)
-- [Javadoc: rotating-secrets](https://bhanafee.github.io/RotatingSecrets/javadoc/rotating-secrets/)
-- [Javadoc: demo](https://bhanafee.github.io/RotatingSecrets/javadoc/demo/)
-- [Apache 2.0 License](https://bhanafee.github.io/RotatingSecrets/LICENSE)
-- [Code of Conduct](https://bhanafee.github.io/RotatingSecrets/CODE_OF_CONDUCT.html)
-- [Claude Code Guidance](https://bhanafee.github.io/RotatingSecrets/CLAUDE.html)
-
 ## How It Works
 
 When running in Kubernetes with a secrets manager (HashiCorp Vault, OpenBao, External Secrets Operator), database credentials can be automatically rotated. The library uses a publisher-subscriber pattern to notify connection pools when credentials change:
@@ -367,3 +358,17 @@ spec:
 | Resilience4j | (via Spring Cloud) |
 | Oracle UCP | (via oracle-jdbc) |
 | Oracle JDBC | ojdbc11 |
+| JaCoCo | 0.8.14 |
+
+## Links
+
+- [GitHub repository](https://github.com/bhanafee/RotatingSecrets)
+- [Javadoc: rotating-secrets](https://bhanafee.github.io/RotatingSecrets/javadoc/rotating-secrets/)
+- [Javadoc: demo](https://bhanafee.github.io/RotatingSecrets/javadoc/demo/)
+- [Test Results: rotating-secrets](https://bhanafee.github.io/RotatingSecrets/tests/rotating-secrets/)
+- [Test Results: demo](https://bhanafee.github.io/RotatingSecrets/tests/demo/)
+- [Coverage Report: rotating-secrets](https://bhanafee.github.io/RotatingSecrets/coverage/rotating-secrets/)
+- [Coverage Report: demo](https://bhanafee.github.io/RotatingSecrets/coverage/demo/)
+- [Apache 2.0 License](https://bhanafee.github.io/RotatingSecrets/LICENSE)
+- [Code of Conduct](https://bhanafee.github.io/RotatingSecrets/CODE_OF_CONDUCT.html)
+- [Claude Code Guidance](https://bhanafee.github.io/RotatingSecrets/CLAUDE.html)
