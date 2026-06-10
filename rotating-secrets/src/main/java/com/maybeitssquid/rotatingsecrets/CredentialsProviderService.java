@@ -79,7 +79,7 @@ public class CredentialsProviderService {
 
   private volatile String username;
   private volatile String password;
-  private volatile boolean secretsAvailable = false;
+  private volatile boolean warnedFilesUnavailable = false;
 
   private final List<UpdatableCredential<String>> updatables = new CopyOnWriteArrayList<>();
 
@@ -195,13 +195,13 @@ public class CredentialsProviderService {
    */
   void refreshCredentials() {
     if (!Files.exists(usernamePath) || !Files.exists(passwordPath)) {
-      if (secretsAvailable) {
+      if (!warnedFilesUnavailable) {
         log.warn("Credential files no longer available at {}", usernamePath.getParent());
+        warnedFilesUnavailable = true;
       }
-      secretsAvailable = false;
       return;
     }
-    secretsAvailable = true;
+    warnedFilesUnavailable = false;
 
     final String newUsername = readSecret(usernamePath, "username");
     final String newPassword = readSecret(passwordPath, "password");
