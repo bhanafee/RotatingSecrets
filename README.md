@@ -8,7 +8,7 @@ When running in Kubernetes with a secrets manager (HashiCorp Vault, OpenBao, Ext
 
 1. **Secret Mounting**: A secrets manager mounts credentials as files in a configurable directory (default: `/var/run/secrets/database/`)
 
-2. **Credential Monitoring**: `CredentialsProviderService` periodically reads the secret files and detects changes
+2. **Credential Monitoring**: `CredentialsProviderService` watches the secrets directory for changes using `WatchService` and re-reads credentials when a change event fires
 
 3. **Pool Notification**: When credentials change, all registered `UpdatableCredential` implementations are notified:
    - **HikariCP**: Updates credentials and soft-evicts existing connections
@@ -27,8 +27,8 @@ sequenceDiagram
 
     VA->>SF: Write new credentials
 
-    loop Every 30 seconds
-        CPS->>SF: Poll for changes
+    loop On directory event or fallback timeout
+        CPS->>SF: Read credentials
         SF-->>CPS: Return file contents
     end
 
@@ -70,8 +70,8 @@ classDiagram
         -username: String
         -password: String
         -updatables: List~UpdatableCredential~
-        +refreshCredentials() void
-        +updateCredentials() void
+        ~refreshCredentials() void
+        ~updateCredentials() void
     }
 
     class HikariCredentialsUpdater {
@@ -130,7 +130,7 @@ classDiagram
 - **Fail-Fast**: The application throws RuntimeException if secrets cannot be read
 - **RBAC**: Ensure the pod has read permissions on mounted secret volumes
 - **FAN Events**: For Oracle RAC, enable FAN in UCP configuration
-- **Credential Refresh Interval**: Tune `k8s.secrets.refreshInterval` based on your rotation frequency
+- **Fallback Interval**: `k8s.secrets.refreshInterval` (default 30000ms) is a safety-net timeout — credentials are re-checked after this interval even if no watch event fires
 
 ## Architecture
 
@@ -162,7 +162,7 @@ flowchart TB
                 PDS["PoolDataSource<br/><i>(Oracle UCP)</i>"]
             end
 
-            SecretFiles -->|"polls every 30s"| CPS
+            SecretFiles -->|"watches for changes"| CPS
             CPS -->|"notifies on change"| HCU
             CPS -->|"notifies on change"| UCU
             HCU --> HDS
@@ -251,7 +251,7 @@ spring.application.name=RotatingSecrets
 
 # Kubernetes secrets path (mounted by Vault Agent or CSI driver)
 k8s.secrets.path=/var/run/secrets/database
-k8s.secrets.refreshInterval=30000
+k8s.secrets.refreshInterval=30000  # fallback timeout (ms) if no watch event fires
 
 # Common datasource settings
 spring.datasource.url=jdbc:oracle:thin:@//host:1521/service
