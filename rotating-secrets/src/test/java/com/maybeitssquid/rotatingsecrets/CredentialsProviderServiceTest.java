@@ -11,6 +11,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -28,11 +29,16 @@ class CredentialsProviderServiceTest {
     usernamePath = tempDir.resolve("username");
     passwordPath = tempDir.resolve("password");
 
-    // Create initial credentials
     Files.writeString(usernamePath, "testuser");
     Files.writeString(passwordPath, "testpass");
 
-    service = new CredentialsProviderService(tempDir.toString());
+    // start() is NOT called here; tests call refreshCredentials() or start() directly.
+    service = new CredentialsProviderService(tempDir.toString(), 30000);
+  }
+
+  @AfterEach
+  void tearDown() {
+    service.stop();
   }
 
   @Test
@@ -144,18 +150,16 @@ class CredentialsProviderServiceTest {
   }
 
   @Test
-  void validateSecretFilePermissions_doesNotThrowWhenFilesExist() {
-    // Should not throw when files exist
-    assertDoesNotThrow(() -> service.validateSecretFilePermissions());
+  void start_doesNotThrowWhenFilesExist() {
+    assertDoesNotThrow(() -> service.start());
   }
 
   @Test
-  void validateSecretFilePermissions_doesNotThrowWhenFilesMissing() throws IOException {
+  void start_doesNotThrowWhenFilesMissing() throws IOException {
     Files.delete(usernamePath);
     Files.delete(passwordPath);
 
-    // Should not throw when files don't exist
-    assertDoesNotThrow(() -> service.validateSecretFilePermissions());
+    assertDoesNotThrow(() -> service.start());
   }
 
   @Test

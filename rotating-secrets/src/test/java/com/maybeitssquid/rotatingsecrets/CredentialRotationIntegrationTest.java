@@ -55,7 +55,7 @@ class CredentialRotationIntegrationTest {
     credentialsUpdater.setDataSource(dataSource);
 
     // Setup credentials provider
-    credentialsProvider = new CredentialsProviderService(tempDir.toString());
+    credentialsProvider = new CredentialsProviderService(tempDir.toString(), 30000);
     credentialsProvider.setHikariUpdatable(credentialsUpdater);
   }
 

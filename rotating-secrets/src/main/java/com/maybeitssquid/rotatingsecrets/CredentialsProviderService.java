@@ -1,19 +1,24 @@
 package com.maybeitssquid.rotatingsecrets;
 
 import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 import java.io.IOException;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardWatchEventKinds;
+import java.nio.file.WatchKey;
+import java.nio.file.WatchService;
 import java.nio.file.attribute.PosixFilePermission;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 /**
@@ -21,10 +26,9 @@ import org.springframework.stereotype.Service;
  * registered {@link UpdatableCredential} components when credentials change.
  *
  * <p>This service implements the credential rotation pattern for Kubernetes environments. It
- * periodically reads username and password from files in a configurable directory (typically
- * mounted by a secrets manager like HashiCorp Vault, OpenBao, or the External Secrets Operator).
- * When credentials change, all registered connection pools are notified to update their
- * credentials.
+ * watches the secrets directory for changes using {@link WatchService} (typically mounted by a
+ * secrets manager like HashiCorp Vault, OpenBao, or the External Secrets Operator). When
+ * credentials change, all registered connection pools are notified to update their credentials.
  *
  * <h2>File Structure</h2>
  *
@@ -35,13 +39,20 @@ import org.springframework.stereotype.Service;
  *   <li>{@code password} - Contains the database password
  * </ul>
  *
+ * <h2>Kubernetes Secret Mounting</h2>
+ *
+ * <p>Kubernetes mounts secrets via atomic symlink swaps on the {@code ..data} directory. Because
+ * individual credential files are symlinks, the watch is registered on the parent directory rather
+ * than the files themselves, so that the directory-level events fired during the symlink swap are
+ * captured.
+ *
  * <h2>Configuration Properties</h2>
  *
  * <ul>
  *   <li>{@code k8s.secrets.path} - Base directory for secret files (default: {@code
  *       /var/run/secrets/database})
- *   <li>{@code k8s.secrets.refreshInterval} - Interval in milliseconds between credential checks
- *       (default: 30000)
+ *   <li>{@code k8s.secrets.refreshInterval} - Fallback poll timeout in milliseconds; a credential
+ *       re-check is forced after this interval even if no watch event fires (default: 30000)
  * </ul>
  *
  * <h2>Thread Safety</h2>
@@ -64,11 +75,16 @@ public class CredentialsProviderService {
   /** Path to the file containing the database password. */
   protected final Path passwordPath;
 
+  private final long refreshIntervalMs;
+
   private volatile String username;
   private volatile String password;
   private volatile boolean secretsAvailable = false;
 
   private final List<UpdatableCredential<String>> updatables = new CopyOnWriteArrayList<>();
+
+  private Thread watchThread;
+  private WatchService watchService;
 
   /**
    * Creates a new credentials provider reading from the specified secrets path.
@@ -78,24 +94,58 @@ public class CredentialsProviderService {
    *
    * @param secretsPath base path where Kubernetes mounts the secret files; defaults to {@code
    *     /var/run/secrets/database}
+   * @param refreshIntervalMs fallback poll timeout in milliseconds; a credential re-check is forced
+   *     after this interval even if no watch event fires; defaults to 30000
    */
   public CredentialsProviderService(
-      @Value("${k8s.secrets.path:/var/run/secrets/database}") String secretsPath) {
+      @Value("${k8s.secrets.path:/var/run/secrets/database}") String secretsPath,
+      @Value("${k8s.secrets.refreshInterval:30000}") long refreshIntervalMs) {
     Path basePath = Path.of(secretsPath);
     this.usernamePath = basePath.resolve("username");
     this.passwordPath = basePath.resolve("password");
+    this.refreshIntervalMs = refreshIntervalMs;
   }
 
   /**
-   * Validates file permissions on startup to warn about insecure configurations.
+   * Validates file permissions on startup and starts the directory watch thread.
    *
-   * <p>This method checks if secret files are world-readable and logs a security warning if they
-   * are. On non-POSIX filesystems, this check is skipped.
+   * <p>Checks if secret files are world-readable and logs a security warning if they are. On
+   * non-POSIX filesystems, the permission check is skipped.
+   *
+   * @throws IOException if the {@link WatchService} cannot be created or the directory cannot be
+   *     registered
    */
   @PostConstruct
-  public void validateSecretFilePermissions() {
+  public void start() throws IOException {
     checkPermissions(usernamePath);
     checkPermissions(passwordPath);
+
+    watchService = FileSystems.getDefault().newWatchService();
+    Path watchDir = usernamePath.getParent();
+    watchDir.register(
+        watchService, StandardWatchEventKinds.ENTRY_CREATE, StandardWatchEventKinds.ENTRY_MODIFY);
+
+    // Do an initial read before the watch loop begins so credentials are available immediately.
+    refreshCredentials();
+
+    watchThread = new Thread(this::watchLoop, "credentials-watch");
+    watchThread.setDaemon(true);
+    watchThread.start();
+  }
+
+  /** Stops the directory watch thread and closes the {@link WatchService}. */
+  @PreDestroy
+  public void stop() {
+    if (watchThread != null) {
+      watchThread.interrupt();
+    }
+    if (watchService != null) {
+      try {
+        watchService.close();
+      } catch (IOException e) {
+        log.debug("Error closing WatchService: {}", e.getMessage());
+      }
+    }
   }
 
   /**
@@ -120,17 +170,33 @@ public class CredentialsProviderService {
   }
 
   /**
-   * Scheduled task that periodically checks for credential changes.
-   *
-   * <p>This method reads the current credentials from the mounted secret files and compares them
-   * with the cached values. If either the username or password has changed, it updates the cache
-   * and notifies all registered {@link UpdatableCredential} components.
-   *
-   * <p>The refresh interval is controlled by the {@code k8s.secrets.refreshInterval} property
-   * (default: 30000ms).
+   * Blocks on the {@link WatchService}, calling {@link #refreshCredentials()} whenever a directory
+   * event fires or the fallback timeout elapses.
    */
-  @Scheduled(fixedDelayString = "${k8s.secrets.refreshInterval:30000}")
-  public void refreshCredentials() {
+  private void watchLoop() {
+    while (!Thread.currentThread().isInterrupted()) {
+      try {
+        WatchKey key = watchService.poll(refreshIntervalMs, TimeUnit.MILLISECONDS);
+        if (key != null) {
+          key.pollEvents();
+          key.reset();
+        }
+        refreshCredentials();
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+      } catch (Exception e) {
+        log.warn("Unexpected error in credential watch loop", e);
+      }
+    }
+  }
+
+  /**
+   * Reads the current credentials from the mounted secret files and notifies registered {@link
+   * UpdatableCredential} components if they have changed.
+   *
+   * <p>This method is safe to call directly in tests.
+   */
+  void refreshCredentials() {
     if (!Files.exists(usernamePath) || !Files.exists(passwordPath)) {
       if (secretsAvailable) {
         log.warn("Credential files no longer available at {}", usernamePath.getParent());
@@ -143,7 +209,6 @@ public class CredentialsProviderService {
     final String newUsername = readSecret(usernamePath, "username");
     final String newPassword = readSecret(passwordPath, "password");
 
-    // Synchronize compare-and-swap to ensure atomic read-compare-write
     synchronized (this) {
       boolean changed = !newUsername.equals(this.username) || !newPassword.equals(this.password);
       if (changed) {
