@@ -125,7 +125,6 @@ public class CredentialsProviderService {
     watchDir.register(
         watchService, StandardWatchEventKinds.ENTRY_CREATE, StandardWatchEventKinds.ENTRY_MODIFY);
 
-    // Do an initial read before the watch loop begins so credentials are available immediately.
     refreshCredentials();
 
     watchThread = new Thread(this::watchLoop, "credentials-watch");
@@ -193,8 +192,6 @@ public class CredentialsProviderService {
   /**
    * Reads the current credentials from the mounted secret files and notifies registered {@link
    * UpdatableCredential} components if they have changed.
-   *
-   * <p>This method is safe to call directly in tests.
    */
   void refreshCredentials() {
     if (!Files.exists(usernamePath) || !Files.exists(passwordPath)) {
