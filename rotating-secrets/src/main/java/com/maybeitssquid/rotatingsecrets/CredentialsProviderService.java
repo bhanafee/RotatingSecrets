@@ -248,7 +248,7 @@ public class CredentialsProviderService {
    * UpdatableCredential#setCredential(String, Object)} with the current username and password. Each
    * component is responsible for its own thread-safe credential update logic.
    */
-  public void updateCredentials() {
+  void updateCredentials() {
     for (UpdatableCredential<String> updatable : updatables) {
       updatable.setCredential(this.username, this.password);
     }
