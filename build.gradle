@@ -26,6 +26,10 @@ subprojects {
         mavenCentral()
     }
 
+    // Override BOM-managed Jackson 2.x to satisfy GHSA-5jmj-h7xm-6q6v: Spring Boot 4.0.7 manages
+    // jackson-2-bom 2.21.4, but the advisory's fix is 2.21.5 (never published) / 2.22.0.
+    ext['jackson-2-bom.version'] = '2.22.0'
+
     dependencyManagement {
         imports {
             mavenBom "org.springframework.boot:spring-boot-dependencies:${libs.versions.spring.boot.get()}"
