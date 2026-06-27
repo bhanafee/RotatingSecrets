@@ -67,3 +67,7 @@ The build uses a Java 25 toolchain and compiles to Java 17 bytecode (`release = 
 ## Security patches
 
 Transitive CVE fixes go in `gradle/libs.versions.toml` as `patch-<cve-id>` library entries using `strictly`/`prefer` version constraints, grouped into the `security-patches` bundle. The root `build.gradle` applies this bundle as `implementation` constraints to all subprojects. The `settings.gradle` classpath hack ensures patch constraints are applied to buildscript dependencies too. The OWASP dependency check plugin (`./gradlew dependencyCheckAnalyze`) fails the build at CVSS ≥ 7.
+
+## Dependency constraints
+
+**Spring Boot and Spring Cloud versions are coupled.** The demo module uses a Spring Cloud starter, and Spring Cloud's compatibility verifier aborts startup with `CompatibilityNotMetException` if the Boot version is outside its supported range. The `2025.1.x` Spring Cloud train (the current `spring-cloud` in the catalog) targets Boot **4.0.x**, so a Boot **4.1.x** bump fails its tests until a Boot-4.1-compatible Spring Cloud release ships. Bump `spring-boot` and `spring-cloud` together in `gradle/libs.versions.toml`, not independently. (Dependabot PRs that bump only one side of this pair will fail CI — see #15.)
