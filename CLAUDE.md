@@ -2,7 +2,7 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Project Overview
+## Project overview
 
 RotatingSecrets is a Java library (`rotating-secrets` module) and demo app (`demo` module) for zero-downtime database credential rotation in Kubernetes. When a secrets manager (Vault, OpenBao, ESO) rotates database credentials by updating mounted secret files, the library detects the change and updates connection pools without dropping connections.
 
@@ -28,6 +28,8 @@ RotatingSecrets is a Java library (`rotating-secrets` module) and demo app (`dem
 # Run OWASP dependency vulnerability check
 ./gradlew dependencyCheckAnalyze
 ```
+
+On Windows, use `gradlew.bat` (or `.\gradlew` in PowerShell).
 
 ## Architecture
 
@@ -60,7 +62,7 @@ Spotless enforces Google Java Format. Run `./gradlew spotlessApply` before commi
 
 Testing uses JUnit Jupiter. Integration tests use `@TempDir` for real filesystem I/O; no database container needed for unit tests (H2 in-memory for demo tests). Mockito is available via `spring-boot-starter-test`.
 
-CI tests on Java 17, 21, and 25 on every push/PR to `main`.
+The build uses a Java 25 toolchain and compiles to Java 17 bytecode (`release = "17"`). CI tests on Java 17, 21, and 25 on every push/PR to `main`.
 
 ## Security patches
 
