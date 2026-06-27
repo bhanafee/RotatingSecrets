@@ -6,6 +6,7 @@ import static org.mockito.Mockito.*;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.PosixFilePermission;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -180,5 +181,83 @@ class CredentialsProviderServiceTest {
 
     // Verify no additional updates after files disappear
     verifyNoMoreInteractions(mockUpdatable);
+  }
+
+  @Test
+  void refreshCredentials_resumesAfterFilesReappear() throws IOException {
+    UpdatableCredential<String> mockUpdatable = mock(UpdatableCredential.class);
+    service.setHikariUpdatable(mockUpdatable);
+
+    service.refreshCredentials();
+    verify(mockUpdatable).setCredential("testuser", "testpass");
+
+    // Files vanish (e.g. during an atomic secret swap)
+    Files.delete(usernamePath);
+    Files.delete(passwordPath);
+    service.refreshCredentials();
+
+    // Files reappear with rotated values
+    Files.writeString(usernamePath, "rotateduser");
+    Files.writeString(passwordPath, "rotatedpass");
+    service.refreshCredentials();
+
+    verify(mockUpdatable).setCredential("rotateduser", "rotatedpass");
+  }
+
+  @Test
+  void refreshCredentials_throwsWhenSecretUnreadable() throws IOException {
+    // Replace the username file with a directory so readString fails with IOException
+    // even though Files.exists() returns true.
+    Files.delete(usernamePath);
+    Files.createDirectory(usernamePath);
+
+    RuntimeException thrown =
+        assertThrows(RuntimeException.class, () -> service.refreshCredentials());
+    assertTrue(thrown.getMessage().contains("username"));
+  }
+
+  @Test
+  void refreshCredentials_trimsWhitespaceFromSecrets() throws IOException {
+    UpdatableCredential<String> mockUpdatable = mock(UpdatableCredential.class);
+    service.setHikariUpdatable(mockUpdatable);
+
+    Files.writeString(usernamePath, "  spaced-user\n");
+    Files.writeString(passwordPath, "\tspaced-pass  \n");
+
+    service.refreshCredentials();
+
+    verify(mockUpdatable).setCredential("spaced-user", "spaced-pass");
+  }
+
+  @Test
+  void start_toleratesWorldReadableSecretFiles() throws IOException {
+    try {
+      Files.setPosixFilePermissions(
+          usernamePath, java.util.EnumSet.allOf(PosixFilePermission.class));
+      Files.setPosixFilePermissions(
+          passwordPath, java.util.EnumSet.allOf(PosixFilePermission.class));
+    } catch (UnsupportedOperationException e) {
+      org.junit.jupiter.api.Assumptions.abort(
+          "Non-POSIX filesystem; permission check not exercised");
+    }
+
+    // World-readable files trigger only a security warning, not a failure.
+    assertDoesNotThrow(() -> service.start());
+  }
+
+  @Test
+  void start_watchThreadPicksUpRotatedCredentials() throws Exception {
+    UpdatableCredential<String> mockUpdatable = mock(UpdatableCredential.class);
+    // Short fallback interval so the watch loop re-checks quickly even without an OS event.
+    service = new CredentialsProviderService(tempDir.toString(), 100);
+    service.setHikariUpdatable(mockUpdatable);
+
+    service.start();
+    verify(mockUpdatable, timeout(2000)).setCredential("testuser", "testpass");
+
+    Files.writeString(usernamePath, "watcheduser");
+    Files.writeString(passwordPath, "watchedpass");
+
+    verify(mockUpdatable, timeout(2000)).setCredential("watcheduser", "watchedpass");
   }
 }
