@@ -353,7 +353,7 @@ spec:
 | Component | Version |
 |-----------|---------|
 | Java | 25 (toolchain; runs on 17+) |
-| Gradle | 9.5.1 |
+| Gradle | 9.6.1 |
 | Spring Boot | 4.0.6 |
 | Spring Cloud Vault | 2025.1.1 |
 | HikariCP | (via Spring Boot) |
