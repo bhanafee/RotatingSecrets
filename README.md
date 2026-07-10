@@ -1,7 +1,5 @@
 # RotatingSecrets
 
-[![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
-
 A library and demo for zero-downtime database credential rotation in Kubernetes environments. The `rotating-secrets` module provides reusable Spring components for HikariCP and Oracle Universal Connection Pool (UCP) that read fresh credentials from Kubernetes-mounted secret files and seamlessly update connection pools when passwords are rotated. The `demo` module is a Spring Boot application that exercises the library.
 
 ## How It Works
@@ -371,6 +369,9 @@ spec:
 - [Test Results: demo](https://bhanafee.github.io/RotatingSecrets/tests/demo/)
 - [Coverage Report: rotating-secrets](https://bhanafee.github.io/RotatingSecrets/coverage/rotating-secrets/)
 - [Coverage Report: demo](https://bhanafee.github.io/RotatingSecrets/coverage/demo/)
-- [Apache 2.0 License](https://bhanafee.github.io/RotatingSecrets/LICENSE)
 - [Code of Conduct](https://bhanafee.github.io/RotatingSecrets/CODE_OF_CONDUCT.html)
 - [Claude Code Guidance](https://bhanafee.github.io/RotatingSecrets/CLAUDE.html)
+
+---
+
+**License:** [![Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
