@@ -3,6 +3,9 @@
 java = "25"
 release = "17"
 
+# BOM overrides for security patches
+jackson = "2.22.1"
+
 # Plugin versions
 spring-boot = "4.1.0"
 spring-cloud = "2025.1.2"
