@@ -370,6 +370,6 @@ spec:
 - [Coverage Report: rotating-secrets](https://bhanafee.github.io/RotatingSecrets/coverage/rotating-secrets/)
 - [Coverage Report: demo](https://bhanafee.github.io/RotatingSecrets/coverage/demo/)
 - [Code of Conduct](https://bhanafee.github.io/RotatingSecrets/CODE_OF_CONDUCT.html)
-- [Claude Code Guidance](https://bhanafee.github.io/RotatingSecrets/CLAUDE.html)
+- [Agents guidance](https://bhanafee.github.io/RotatingSecrets/AGENTS.html)
 
 [![Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
