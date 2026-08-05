@@ -14,7 +14,6 @@ RotatingSecrets is a Java library (`rotating-secrets` module) and demo app (`dem
 ./gradlew :rotating-secrets:test  # test one module
 ./gradlew test --tests "..."      # run a single test class
 ./gradlew spotlessApply           # auto-format (required before commit)
-./gradlew :demo:bootRun --args='--k8s.secrets.path=/tmp/secrets/database'  # run demo
 ./gradlew dependencyCheckAnalyze  # OWASP vulnerability scan (slow; fails at CVSS ≥ 7)
 ```
 
@@ -52,6 +51,22 @@ Spotless enforces Google Java Format. Run `./gradlew spotlessApply` before commi
 ## Security patches
 
 For CVE patch management, see the `gradle-security-patch` skill. Use `/gradle-security-patch` to pin a CVE fix in the version catalog.
+
+## Local Development
+
+**Running the demo:**
+
+The demo requires a running database and a secrets manager. To run locally with filesystem-based secrets:
+
+```bash
+mkdir -p /tmp/secrets/database
+echo "dbuser" > /tmp/secrets/database/username
+echo "dbpassword" > /tmp/secrets/database/password
+
+./gradlew :demo:bootRun --args='--k8s.secrets.path=/tmp/secrets/database'
+```
+
+Update the secret files to trigger rotation (the service polls every 30 seconds by default).
 
 ## Dependency constraints
 
