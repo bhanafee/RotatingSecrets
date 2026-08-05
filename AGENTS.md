@@ -49,8 +49,6 @@ Two implementations are wired as named beans (`hikariUpdater`, `ucpUpdater`) and
 
 Spotless enforces Google Java Format. Run `./gradlew spotlessApply` before committing. `module-info.java` is excluded from formatting.
 
-Testing uses JUnit Jupiter. Integration tests use `@TempDir` for real filesystem I/O. Mockito is available via `spring-boot-starter-test`.
-
 ## Security patches
 
 For CVE patch management, see the `gradle-security-patch` skill. Use `/gradle-security-patch` to pin a CVE fix in the version catalog.
