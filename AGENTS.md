@@ -9,27 +9,18 @@ RotatingSecrets is a Java library (`rotating-secrets` module) and demo app (`dem
 ## Commands
 
 ```bash
-# Build and test everything (also runs Spotless formatting check and OWASP CVE scan)
-./gradlew build
-
-# Run tests only
-./gradlew test
-
-# Run a single test class
-./gradlew :rotating-secrets:test --tests "com.maybeitssquid.rotatingsecrets.CredentialsProviderServiceTest"
-./gradlew :demo:test --tests "com.maybeitssquid.rotatingsecrets.RotatingSecretsApplicationTests"
-
-# Apply Google Java Format via Spotless
-./gradlew spotlessApply
-
-# Run the demo app (requires a running database; override secrets path for local dev)
-./gradlew :demo:bootRun --args='--k8s.secrets.path=/tmp/secrets/database'
-
-# Run OWASP dependency vulnerability check
-./gradlew dependencyCheckAnalyze
+./gradlew build                   # compile, test, spotless check
+./gradlew test                    # run tests (both modules)
+./gradlew :rotating-secrets:test  # test one module
+./gradlew test --tests "..."      # run a single test class
+./gradlew spotlessApply           # auto-format (required before commit)
+./gradlew :demo:bootRun --args='--k8s.secrets.path=/tmp/secrets/database'  # run demo
+./gradlew dependencyCheckAnalyze  # OWASP vulnerability scan (slow; fails at CVSS ≥ 7)
 ```
 
 On Windows, use `gradlew.bat` (or `.\gradlew` in PowerShell).
+
+Build uses Java 25 toolchain, compiles to Java 17 bytecode (`release = "17"`). CI tests on Java 17, 21, and 25.
 
 ## Architecture
 
@@ -58,15 +49,13 @@ Two implementations are wired as named beans (`hikariUpdater`, `ucpUpdater`) and
 
 ## Code style
 
-Spotless enforces Google Java Format. Run `./gradlew spotlessApply` before committing; `build` will fail if formatting is off. `module-info.java` is excluded from Spotless.
+Spotless enforces Google Java Format. Run `./gradlew spotlessApply` before committing. `module-info.java` is excluded from formatting.
 
-Testing uses JUnit Jupiter. Integration tests use `@TempDir` for real filesystem I/O; no database container needed for unit tests (H2 in-memory for demo tests). Mockito is available via `spring-boot-starter-test`.
-
-The build uses a Java 25 toolchain and compiles to Java 17 bytecode (`release = "17"`). CI tests on Java 17, 21, and 25 on every push/PR to `main`.
+Testing uses JUnit Jupiter. Integration tests use `@TempDir` for real filesystem I/O. Mockito is available via `spring-boot-starter-test`.
 
 ## Security patches
 
-Transitive CVE fixes go in `gradle/libs.versions.toml` as `patch-<cve-id>` library entries using `strictly`/`prefer` version constraints, grouped into the `security-patches` bundle. The root `build.gradle` applies this bundle as `implementation` constraints to all subprojects. The `settings.gradle` classpath hack ensures patch constraints are applied to buildscript dependencies too. The OWASP dependency check plugin (`./gradlew dependencyCheckAnalyze`) fails the build at CVSS ≥ 7.
+For CVE patch management, see the `gradle-security-patch` skill. Use `/gradle-security-patch` to pin a CVE fix in the version catalog.
 
 ## Dependency constraints
 
