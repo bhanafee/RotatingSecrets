@@ -8,16 +8,32 @@ RotatingSecrets is a Java library (`rotating-secrets` module) and demo app (`dem
 
 ## Commands
 
+**Build and test:**
 ```bash
-./gradlew build                   # compile, test, spotless check
-./gradlew test                    # run tests (both modules)
-./gradlew :rotating-secrets:test  # test one module
-./gradlew test --tests "..."      # run a single test class
+./gradlew build              # compile, test, spotless check
+./gradlew test               # run all tests (both modules)
+./gradlew :rotating-secrets:test  # test only rotating-secrets module
+./gradlew :demo:test         # test only demo module
+./gradlew test --tests "*ProviderTest"        # run tests by class name
+./gradlew test --tests "*ProviderTest.test*"  # run tests by method pattern
+```
+
+**Code quality:**
+```bash
 ./gradlew spotlessApply           # auto-format (required before commit)
 ./gradlew dependencyCheckAnalyze  # OWASP vulnerability scan (slow; fails at CVSS ≥ 7)
 ```
 
+**External dependencies:** Requires Kubernetes, secrets manager (Vault/OpenBao/ESO). Demo requires database.
+
 Build uses Java 25 toolchain, compiles to Java 17 bytecode (`release = "17"`). CI tests on Java 17, 21, and 25.
+
+## Key Entry Points
+
+- **`CredentialsProviderService`** — watches secret files and triggers credential updates (`:rotating-secrets` module)
+- **`HikariCredentialsUpdater`** — implements HikariCP credential rotation
+- **`UcpCredentialsUpdater`** — implements Oracle UCP credential rotation
+- **`RotatingSecretsApplication`** — Spring Boot demo app wiring both pool implementations (`:demo` module)
 
 ## Architecture
 
