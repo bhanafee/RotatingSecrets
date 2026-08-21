@@ -4,10 +4,6 @@ buildscript {
     }
 }
 
-def overrideBomVersion(String bomProperty, String versionKey) {
-    ext[bomProperty] = libs.versions."${versionKey}".get()
-}
-
 plugins {
     alias(libs.plugins.spring.boot) apply false
     alias(libs.plugins.spring.dependency.management) apply false
@@ -41,10 +37,6 @@ subprojects {
             }
         }
     }
-
-    // Override BOM-managed versions to satisfy security patches
-    overrideBomVersion('jackson-2-bom.version', 'jackson')      // GHSA-5jmj-h7xm-6q6v, CVE-2026-54515
-    overrideBomVersion('log4j.version', 'log4j')                // CVE-2026-49844
 
     dependencyManagement {
         imports {
