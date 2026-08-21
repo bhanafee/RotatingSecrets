@@ -4,6 +4,10 @@ buildscript {
     }
 }
 
+def overrideBomVersion(String bomProperty, String versionKey) {
+    ext[bomProperty] = libs.versions."${versionKey}".get()
+}
+
 plugins {
     alias(libs.plugins.spring.boot) apply false
     alias(libs.plugins.spring.dependency.management) apply false
@@ -38,9 +42,9 @@ subprojects {
         }
     }
 
-    // Override BOM-managed Jackson 2.x to satisfy GHSA-5jmj-h7xm-6q6v and CVE-2026-54515:
-    // Spring Boot 4.0.7 manages jackson-2-bom 2.21.4; fixes require 2.22.1.
-    ext['jackson-2-bom.version'] = libs.versions.jackson.get()
+    // Override BOM-managed versions to satisfy security patches
+    overrideBomVersion('jackson-2-bom.version', 'jackson')      // GHSA-5jmj-h7xm-6q6v, CVE-2026-54515
+    overrideBomVersion('log4j.version', 'log4j')                // CVE-2026-49844
 
     dependencyManagement {
         imports {
