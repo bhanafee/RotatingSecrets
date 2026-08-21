@@ -5,6 +5,10 @@ release = "17"
 
 # BOM overrides for security patches
 jackson = "2.22.1"
+httpcore5H2 = "5.4.3"
+httpcore5Core = "5.4.3"
+httpclient5 = "5.6.3"
+log4jApi = "2.25.5"
 
 # Plugin versions
 spring-boot = "4.1.0"
@@ -51,6 +55,7 @@ patch-cve-2026-54428 = { module = "org.apache.httpcomponents.core5:httpcore5-h2"
 patch-cve-2026-54399 = { module = "org.apache.httpcomponents.core5:httpcore5", version = { strictly = "[5.4.3,)", prefer = "5.4.3" } }
 patch-cve-2026-64607 = { module = "org.apache.httpcomponents.client5:httpclient5", version = { strictly = "[5.6.3,)", prefer = "5.6.3" } }
 patch-cve-2026-49844 = { module = "org.apache.logging.log4j:log4j-api", version = { strictly = "[2.25.5,)", prefer = "2.25.5" } }
+patch-cve-2026-49844-log4j-to-slf4j = { module = "org.apache.logging.log4j:log4j-to-slf4j", version = { strictly = "[2.25.5,)", prefer = "2.25.5" } }
 
 [bundles]
 security-patches = ["patch-cve-2022-45868", "patch-cve-2025-4949", "patch-cve-2025-48734", "patch-cve-2025-48924", "patch-cve-2026-5598-bcpg", "patch-cve-2026-5598-bcprov", "patch-cve-2026-49844", "patch-cve-2026-54399", "patch-cve-2026-54428", "patch-cve-2026-54515", "patch-cve-2026-64607", "patch-ghsa-72hv-8253-57qq", "patch-ghsa-5jmj-h7xm-6q6v", "patch-ghsa-5gvw-p9qm-jgwh-tools-jackson-core", "patch-ghsa-5gvw-p9qm-jgwh-tools-jackson-databind", "patch-ghsa-dcmj-56c4-q8dh"]
