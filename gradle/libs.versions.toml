@@ -29,7 +29,6 @@ oracle-ojdbc = { module = "com.oracle.database.jdbc:ojdbc11" }
 junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
 
 # Security patches - BouncyCastle (CVE-2026-5598 covers all prior bcprov/bcpg CVEs)
-patch-cve-2026-5598-bcpg = { module = "org.bouncycastle:bcpg-jdk18on", version = { strictly = "[1.84,)", prefer = "1.84" } }
 patch-cve-2026-5598-bcprov = { module = "org.bouncycastle:bcprov-jdk18on", version = { strictly = "[1.84,)", prefer = "1.84" } }
 
 # Security patches - Apache Commons
@@ -58,7 +57,7 @@ patch-cve-2026-49844 = { module = "org.apache.logging.log4j:log4j-api", version 
 patch-cve-2026-49844-log4j-to-slf4j = { module = "org.apache.logging.log4j:log4j-to-slf4j", version = { strictly = "[2.25.5,)", prefer = "2.25.5" } }
 
 [bundles]
-security-patches = ["patch-cve-2022-45868", "patch-cve-2025-4949", "patch-cve-2025-48734", "patch-cve-2025-48924", "patch-cve-2026-5598-bcpg", "patch-cve-2026-5598-bcprov", "patch-cve-2026-49844", "patch-cve-2026-54399", "patch-cve-2026-54428", "patch-cve-2026-54515", "patch-cve-2026-64607", "patch-ghsa-72hv-8253-57qq", "patch-ghsa-5jmj-h7xm-6q6v", "patch-ghsa-5gvw-p9qm-jgwh-tools-jackson-core", "patch-ghsa-5gvw-p9qm-jgwh-tools-jackson-databind", "patch-ghsa-dcmj-56c4-q8dh"]
+security-patches = ["patch-cve-2022-45868", "patch-cve-2025-4949", "patch-cve-2025-48734", "patch-cve-2025-48924", "patch-cve-2026-5598-bcprov", "patch-cve-2026-49844", "patch-cve-2026-54399", "patch-cve-2026-54428", "patch-cve-2026-54515", "patch-cve-2026-64607", "patch-ghsa-72hv-8253-57qq", "patch-ghsa-5jmj-h7xm-6q6v", "patch-ghsa-5gvw-p9qm-jgwh-tools-jackson-core", "patch-ghsa-5gvw-p9qm-jgwh-tools-jackson-databind", "patch-ghsa-dcmj-56c4-q8dh"]
 
 [plugins]
 spring-boot = { id = "org.springframework.boot", version.ref = "spring-boot" }
