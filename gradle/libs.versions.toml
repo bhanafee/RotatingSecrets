@@ -12,7 +12,7 @@ log4jApi = "2.25.5"
 
 # Plugin versions
 spring-boot = "4.1.1"
-spring-cloud = "2025.1.2"
+spring-cloud = "2025.1.3"
 spring-dependency-management = "1.1.7"
 spotless = "8.+"
 owasp-dependencycheck = "12.+"
