@@ -15,6 +15,7 @@ log4jApi = "2.25.5"
 spring-boot = "4.1.1"
 spring-cloud = "2025.1.3"
 spring-dependency-management = "1.1.7"
+git-version = "5.1.0"
 spotless = "8.+"
 owasp-dependencycheck = "12.+"
 
@@ -61,10 +62,11 @@ patch-cve-2026-49844 = { module = "org.apache.logging.log4j:log4j-api", version 
 patch-cve-2026-49844-log4j-to-slf4j = { module = "org.apache.logging.log4j:log4j-to-slf4j", version = { strictly = "[2.25.5,)", prefer = "2.25.5" } }
 
 [bundles]
-security-patches = ["patch-cve-2022-45868", "patch-cve-2025-48734", "patch-cve-2025-48924", "patch-cve-2025-4949", "patch-cve-2026-49844", "patch-cve-2026-54399", "patch-cve-2026-54428", "patch-cve-2026-5598-bcprov", "patch-cve-2026-71290", "patch-cve-2026-75140", "patch-cve-2026-89407", "patch-cve-2026-89407-tools-jackson-core", "patch-cve-2026-91776", "patch-cve-2026-91776-tools-jackson-databind"]
+security-patches = ["patch-cve-2022-45868", "patch-cve-2025-48734", "patch-cve-2025-48924", "patch-cve-2025-4949", "patch-cve-2026-49844", "patch-cve-2026-49844-log4j-to-slf4j", "patch-cve-2026-54399", "patch-cve-2026-54428", "patch-cve-2026-5598-bcprov", "patch-cve-2026-71290", "patch-cve-2026-75140", "patch-cve-2026-89407", "patch-cve-2026-89407-tools-jackson-core", "patch-cve-2026-91776", "patch-cve-2026-91776-tools-jackson-databind"]
 
 [plugins]
 spring-boot = { id = "org.springframework.boot", version.ref = "spring-boot" }
+git-version = { id = "com.palantir.git-version", version.ref = "git-version" }
 spring-dependency-management = { id = "io.spring.dependency-management", version.ref = "spring-dependency-management" }
 spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
 owasp-dependencycheck = { id = "org.owasp.dependencycheck", version.ref = "owasp-dependencycheck" }
