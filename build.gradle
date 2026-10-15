@@ -41,6 +41,10 @@ subprojects {
     dependencyManagement {
         imports {
             mavenBom "org.springframework.boot:spring-boot-dependencies:${libs.versions.spring.boot.get()}"
+            // Jackson BOMs import after Spring Boot's, so they override its Jackson versions and
+            // keep every module aligned. Jackson 2 last so its jackson-annotations wins over Jackson 3's.
+            mavenBom "tools.jackson:jackson-bom:${libs.versions.jackson3.get()}"
+            mavenBom "com.fasterxml.jackson:jackson-bom:${libs.versions.jackson.get()}"
         }
     }
 
@@ -94,6 +98,7 @@ subprojects {
 
     dependencyCheck {
         failBuildOnCVSS = 7
+        suppressionFile = rootProject.file('config/dependency-check-suppressions.xml').path
     }
 
     tasks.withType(Javadoc).configureEach {
