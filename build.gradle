@@ -83,7 +83,10 @@ subprojects {
 
     testing {
         suites.test {
-            useJUnitJupiter()
+            // The version comes from the Spring Boot BOM. Without one, useJUnitJupiter() declares Gradle's
+            // default, and the dependency-management plugin lets a declared version win over the BOM. Read
+            // lazily, so BOMs imported later in the build (such as a subproject's Spring Cloud BOM) count.
+            useJUnitJupiter(provider { dependencyManagement.importedProperties['junit-jupiter.version'] })
             dependencies {
                 implementation libs.spring.boot.starter.test
                 runtimeOnly libs.junit.platform.launcher
