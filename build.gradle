@@ -12,6 +12,10 @@ plugins {
     alias(libs.plugins.owasp.dependencycheck) apply false
 }
 
+// The NVD key is optional. Without one, the check uses the local NVD cache and warns.
+def nvdKey = providers.environmentVariable('NVD_API_KEY')
+    .orElse(providers.gradleProperty('nvd.apiKey')).orNull
+
 subprojects {
     apply plugin: 'java-library'
     apply plugin: 'jvm-test-suite'
@@ -132,6 +136,19 @@ subprojects {
     dependencyCheck {
         failBuildOnCVSS = 7
         suppressionFile = rootProject.file('config/dependency-check-suppressions.xml').path
+        if (nvdKey) {
+            nvd { apiKey = nvdKey }
+        } else {
+            autoUpdate = false
+        }
+    }
+
+    tasks.named('dependencyCheckAnalyze') {
+        doFirst {
+            if (!nvdKey) {
+                logger.warn('NVD_API_KEY is not set: using the local NVD cache without a live update.')
+            }
+        }
     }
 
     tasks.withType(Javadoc).configureEach {

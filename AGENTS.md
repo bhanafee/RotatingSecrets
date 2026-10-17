@@ -24,6 +24,8 @@ RotatingSecrets is a Java library (`rotating-secrets` module) and demo app (`dem
 ./gradlew dependencyCheckAnalyze  # OWASP vulnerability scan (slow; fails at CVSS ≥ 7)
 ```
 
+**NVD key (optional):** `dependencyCheckAnalyze` reads the key from the `NVD_API_KEY` environment variable or the `nvd.apiKey` Gradle property. With a key, it updates the NVD data live. Without one, it uses the local NVD cache and logs a warning. CI runs without a key, so it also uses the cache.
+
 **External dependencies:** Requires Kubernetes, secrets manager (Vault/OpenBao/ESO). Demo requires database.
 
 Build uses Java 25 toolchain, compiles to Java 17 bytecode (`release = "17"`). CI tests on Java 17, 21, and 25.
