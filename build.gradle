@@ -13,8 +13,10 @@ plugins {
 }
 
 // The NVD key is optional. Without one, the check uses the local NVD cache and warns.
+// shared:begin nvd-key
 def nvdKey = providers.environmentVariable('NVD_API_KEY')
     .orElse(providers.gradleProperty('nvd.apiKey')).orNull
+// shared:end nvd-key
 
 subprojects {
     apply plugin: 'java-library'
@@ -36,6 +38,7 @@ subprojects {
     // Match known prerelease qualifiers rather than allowlisting stable ones. Stable releases carry
     // odd suffixes — 0.0.20131108.vaadin1 and 2.3.1-b170201.1204 are both stable — and an allowlist
     // rejects them, breaking resolution of transitive dependencies.
+    // shared:begin prerelease-filter
     configurations.all {
         resolutionStrategy.componentSelection.all { selection ->
             if (selection.candidate.version ==~ /(?i).*[.\-](alpha|beta|rc|cr|snapshot|preview|dev|milestone|m\d+)[.\-]?\d*$/) {
@@ -43,6 +46,7 @@ subprojects {
             }
         }
     }
+    // shared:end prerelease-filter
 
     // Imported BOMs win over the catalog's security-patch constraints for the modules they manage,
     // so those modules also need a dependencyManagement override. The versions come from the patch
@@ -66,16 +70,20 @@ subprojects {
     }
 
     java {
+        // shared:begin toolchain
         toolchain {
             languageVersion = JavaLanguageVersion.of(libs.versions.java.get())
         }
+        // shared:end toolchain
         withSourcesJar()
         withJavadocJar()
     }
 
+    // shared:begin release-option
     tasks.withType(JavaCompile).configureEach {
         options.release = libs.versions.release.get().toInteger()
     }
+    // shared:end release-option
 
     dependencies {
         constraints {
@@ -115,6 +123,7 @@ subprojects {
         }
     }
 
+    // shared:begin jacoco-report
     tasks.named('jacocoTestReport') {
         dependsOn tasks.named('test')
         reports {
@@ -122,7 +131,9 @@ subprojects {
             xml.required = false
         }
     }
+    // shared:end jacoco-report
 
+    // shared:begin spotless
     spotless {
         java {
             targetExclude 'src/*/java/module-info.java'
@@ -132,17 +143,24 @@ subprojects {
             endWithNewline()
         }
     }
+    // shared:end spotless
 
+    // shared:begin dependency-check
     dependencyCheck {
         failBuildOnCVSS = 7
-        suppressionFile = rootProject.file('config/dependency-check-suppressions.xml').path
         if (nvdKey) {
             nvd { apiKey = nvdKey }
         } else {
             autoUpdate = false
         }
     }
+    // shared:end dependency-check
 
+    dependencyCheck {
+        suppressionFile = rootProject.file('config/dependency-check-suppressions.xml').path
+    }
+
+    // shared:begin nvd-warning
     tasks.named('dependencyCheckAnalyze') {
         doFirst {
             if (!nvdKey) {
@@ -150,7 +168,9 @@ subprojects {
             }
         }
     }
+    // shared:end nvd-warning
 
+    // shared:begin javadoc-options
     tasks.withType(Javadoc).configureEach {
         options {
             encoding = 'UTF-8'
@@ -164,6 +184,7 @@ subprojects {
             )
         }
     }
+    // shared:end javadoc-options
 }
 
 // The library is published; the demo is a Spring Boot application and is not.
