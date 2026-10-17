@@ -37,6 +37,35 @@ Build uses Java 25 toolchain, compiles to Java 17 bytecode (`release = "17"`). C
 - **`UcpCredentialsUpdater`** — implements Oracle UCP credential rotation
 - **`RotatingSecretsApplication`** — Spring Boot demo app wiring both pool implementations (`:demo` module)
 
+## Versioning and Releases
+
+Versions are derived from git tags using [`gradle-git-version`](https://github.com/palantir/gradle-git-version):
+
+- **On a tag** (e.g., `v1.0.0`) → version = `1.0.0`
+- **After a tag** → version = tag + distance + commit hash (e.g., `1.0.1-3-gABC1234` = 3 commits after v1.0.0)
+- **No tags yet** → version synthesized from git history (e.g., `0.0.1-dev-88-gXYZ`)
+
+**To create a release:**
+
+```bash
+# Ensure all commits are pushed
+git push origin main
+
+# Create and push the tag (triggers automatic version picking in build)
+git tag -a v1.0.0 -m "Release 1.0.0"
+git push origin v1.0.0
+
+# Build and publish
+./gradlew clean build publish
+```
+
+**To delete a release tag:**
+
+```bash
+git tag -d v1.0.0              # Delete locally
+git push origin :v1.0.0        # Delete from remote
+```
+
 ## Architecture
 
 ### Module structure
@@ -46,7 +75,7 @@ Build uses Java 25 toolchain, compiles to Java 17 bytecode (`release = "17"`). C
 
 ### Credential rotation flow
 
-`CredentialsProviderService` is a `@Scheduled` Spring service that polls two files (`username`, `password`) from a Kubernetes-mounted directory (default `/var/run/secrets/database`). On first read or any change it calls `setCredential(username, password)` on every registered `UpdatableCredential<String>` bean.
+`CredentialsProviderService` runs a `WatchService` thread on two files (`username`, `password`) in a Kubernetes-mounted directory (default `/var/run/secrets/database`). It re-reads the files on any directory event, and also when the `refreshInterval` fallback timeout elapses with no event. On first read or any change it calls `setCredential(username, password)` on every registered `UpdatableCredential<String>` bean.
 
 Two implementations are wired as named beans (`hikariUpdater`, `ucpUpdater`) and auto-registered via `@Autowired @Qualifier` setters on `CredentialsProviderService`:
 
@@ -58,7 +87,7 @@ Two implementations are wired as named beans (`hikariUpdater`, `ucpUpdater`) and
 | Property | Default | Purpose |
 |---|---|---|
 | `k8s.secrets.path` | `/var/run/secrets/database` | Directory with `username` and `password` files |
-| `k8s.secrets.refreshInterval` | `30000` | Poll interval (ms) |
+| `k8s.secrets.refreshInterval` | `30000` | Fallback re-check interval (ms) when no file event arrives |
 | `spring.datasource.*` | — | HikariCP datasource (primary) |
 | `spring.datasource.ucp.*` | — | Oracle UCP datasource |
 
@@ -88,7 +117,7 @@ echo "dbpassword" > /tmp/secrets/database/password
 ./gradlew :demo:bootRun --args='--k8s.secrets.path=/tmp/secrets/database'
 ```
 
-Update the secret files to trigger rotation (the service polls every 30 seconds by default).
+Update the secret files to trigger rotation. The service reacts to file events right away; `refreshInterval` (30 seconds by default) is only the fallback re-check.
 
 ## Dependency constraints
 
