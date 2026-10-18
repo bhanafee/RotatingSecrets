@@ -8,6 +8,8 @@ testing {
     suites.test {
         dependencies {
             runtimeOnly libs.h2
+            // Wires the provider the way a real app does. Not UCP: this test proves a Hikari-only app starts.
+            implementation project(':rotating-secrets-spring')
         }
     }
 }
