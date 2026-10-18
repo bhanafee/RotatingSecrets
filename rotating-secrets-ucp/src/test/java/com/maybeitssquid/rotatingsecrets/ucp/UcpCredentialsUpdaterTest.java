@@ -6,6 +6,7 @@ import static org.mockito.Mockito.*;
 import com.maybeitssquid.rotatingsecrets.CredentialRotationException;
 import java.sql.SQLException;
 import oracle.ucp.UniversalConnectionPoolException;
+import oracle.ucp.admin.UniversalConnectionPoolManager;
 import oracle.ucp.jdbc.PoolDataSource;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -23,14 +24,9 @@ class UcpCredentialsUpdaterTest {
   }
 
   @Test
-  void setCredential_updatesUserAndPasswordBeforeRefresh() throws Exception {
-    // The pool name is not registered with the real UCP manager, so refreshConnectionPool
-    // will fail. We only assert that the credentials were pushed onto the pool first.
-    try {
-      updater.setCredential("newUser", "newPass");
-    } catch (CredentialRotationException expected) {
-      // Refreshing an unregistered pool is expected to fail; not the focus of this test.
-    }
+  void setCredential_updatesUserAndPasswordOfUnregisteredPool() throws Exception {
+    // The pool has not been created, so there is nothing to refresh and no exception.
+    assertDoesNotThrow(() -> updater.setCredential("newUser", "newPass"));
 
     verify(poolDataSource).setUser("newUser");
     verify(poolDataSource).setPassword("newPass");
@@ -65,14 +61,33 @@ class UcpCredentialsUpdaterTest {
   }
 
   @Test
-  void setCredential_wrapsRefreshFailureForUnknownPool() {
-    // The mocked pool is never registered with the UCP manager, so refreshConnectionPool
-    // throws a UniversalConnectionPoolException, which must be wrapped.
+  void setCredential_wrapsRefreshFailureForRegisteredPool() throws Exception {
+    UniversalConnectionPoolManager manager = mock(UniversalConnectionPoolManager.class);
+    String poolName = poolDataSource.getConnectionPoolName();
+    when(manager.getConnectionPoolNames()).thenReturn(new String[] {poolName});
+    UniversalConnectionPoolException cause = new UniversalConnectionPoolException("refresh failed");
+    doThrow(cause).when(manager).refreshConnectionPool(poolName);
+
+    updater = new UcpCredentialsUpdater(poolDataSource, () -> manager);
+
     CredentialRotationException thrown =
         assertThrows(
             CredentialRotationException.class, () -> updater.setCredential("user", "pass"));
 
-    assertInstanceOf(UniversalConnectionPoolException.class, thrown.getCause());
+    assertSame(cause, thrown.getCause());
     assertTrue(thrown.getMessage().contains("refresh"));
+  }
+
+  @Test
+  void setCredential_refreshesRegisteredPool() throws Exception {
+    UniversalConnectionPoolManager manager = mock(UniversalConnectionPoolManager.class);
+    String poolName = poolDataSource.getConnectionPoolName();
+    when(manager.getConnectionPoolNames()).thenReturn(new String[] {poolName});
+
+    updater = new UcpCredentialsUpdater(poolDataSource, () -> manager);
+
+    updater.setCredential("user", "pass");
+
+    verify(manager).refreshConnectionPool(poolName);
   }
 }

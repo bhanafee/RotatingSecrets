@@ -8,6 +8,10 @@ testing {
     suites.test {
         dependencies {
             runtimeOnly libs.oracle.ojdbc
+            // Lets the UCP pool connect to an in-memory database in tests, as the demo does.
+            runtimeOnly libs.h2
+            // Wires the provider the way a real app does. Not Hikari: this test proves a UCP-only app starts.
+            implementation project(':rotating-secrets-spring')
         }
     }
 }
