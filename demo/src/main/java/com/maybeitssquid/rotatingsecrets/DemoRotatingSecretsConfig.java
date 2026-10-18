@@ -2,6 +2,7 @@ package com.maybeitssquid.rotatingsecrets;
 
 import com.maybeitssquid.rotatingsecrets.hikari.HikariCredentialsUpdater;
 import com.maybeitssquid.rotatingsecrets.ucp.UcpCredentialsUpdater;
+import java.time.Duration;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -25,7 +26,7 @@ public class DemoRotatingSecretsConfig {
    * directory.
    *
    * @param secretsPath directory with the {@code username} and {@code password} files
-   * @param refreshIntervalMs fallback re-check interval in milliseconds
+   * @param refreshInterval fallback re-check interval, such as {@code 30s}
    * @param hikariUpdater updater for the HikariCP pool
    * @param ucpUpdater updater for the Oracle UCP pool
    * @return the started credential provider
@@ -33,11 +34,11 @@ public class DemoRotatingSecretsConfig {
   @Bean(initMethod = "start", destroyMethod = "stop")
   public CredentialsProviderService credentialsProvider(
       @Value("${k8s.secrets.path:/var/run/secrets/database}") String secretsPath,
-      @Value("${k8s.secrets.refreshInterval:30000}") long refreshIntervalMs,
+      @Value("${k8s.secrets.refresh-interval:30s}") Duration refreshInterval,
       HikariCredentialsUpdater hikariUpdater,
       UcpCredentialsUpdater ucpUpdater) {
     CredentialsProviderService provider =
-        new CredentialsProviderService(secretsPath, refreshIntervalMs);
+        new CredentialsProviderService(secretsPath, refreshInterval.toMillis());
     provider.register(hikariUpdater);
     provider.register(ucpUpdater);
     return provider;

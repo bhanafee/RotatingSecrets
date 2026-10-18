@@ -45,8 +45,9 @@ import org.slf4j.LoggerFactory;
  * <ul>
  *   <li>{@code k8s.secrets.path} - Base directory for secret files (default: {@code
  *       /var/run/secrets/database})
- *   <li>{@code k8s.secrets.refreshInterval} - Fallback poll timeout in milliseconds; a credential
- *       re-check is forced after this interval even if no watch event fires (default: 30000)
+ *   <li>{@code k8s.secrets.refresh-interval} - Fallback poll timeout as a {@code Duration}, such as
+ *       {@code 30s}, read by the application's configuration; a credential re-check is forced after
+ *       this interval even if no watch event fires (default: 30000)
  * </ul>
  *
  * <h2>Thread Safety</h2>
