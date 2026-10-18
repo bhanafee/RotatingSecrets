@@ -1,9 +1,12 @@
 apply plugin: 'org.springframework.boot'
 
 dependencies {
-    implementation project(':rotating-secrets')
+    implementation project(':rotating-secrets-hikari')
+    implementation project(':rotating-secrets-ucp')
+    implementation libs.spring.boot.starter.data.jpa
     implementation libs.spring.cloud.starter.circuitbreaker.resilience4j
     implementation libs.spring.cloud.starter.vault.config
+    runtimeOnly libs.oracle.ojdbc
     runtimeOnly libs.h2
 }
 

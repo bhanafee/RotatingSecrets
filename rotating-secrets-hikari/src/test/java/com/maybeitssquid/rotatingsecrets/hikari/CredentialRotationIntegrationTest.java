@@ -1,8 +1,8 @@
-package com.maybeitssquid.rotatingsecrets;
+package com.maybeitssquid.rotatingsecrets.hikari;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.maybeitssquid.rotatingsecrets.hikari.HikariCredentialsUpdater;
+import com.maybeitssquid.rotatingsecrets.CredentialsProviderService;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import java.io.IOException;
@@ -56,7 +56,7 @@ class CredentialRotationIntegrationTest {
 
     // Setup credentials provider
     credentialsProvider = new CredentialsProviderService(tempDir.toString(), 30000);
-    credentialsProvider.setHikariUpdatable(credentialsUpdater);
+    credentialsProvider.register(credentialsUpdater);
   }
 
   @AfterEach

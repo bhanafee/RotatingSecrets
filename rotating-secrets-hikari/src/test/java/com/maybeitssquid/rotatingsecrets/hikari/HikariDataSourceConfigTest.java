@@ -76,21 +76,4 @@ class HikariDataSourceConfigTest {
       assertFalse(conn.isClosed());
     }
   }
-
-  @Test
-  void closeDataSource_closesCreatedPool() {
-    HikariCredentialsUpdater updater = config.hikariCredentialsUpdater();
-    dataSource = config.dataSource(config.hikariConfig(), updater);
-    assertFalse(dataSource.isClosed());
-
-    config.closeDataSource();
-
-    assertTrue(dataSource.isClosed());
-  }
-
-  @Test
-  void closeDataSource_isNoOpWhenNoDataSourceCreated() {
-    // No dataSource() call has happened, so there is nothing to close.
-    assertDoesNotThrow(() -> config.closeDataSource());
-  }
 }

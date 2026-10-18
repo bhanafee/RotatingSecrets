@@ -169,45 +169,53 @@ subprojects {
     }
 }
 
-// The library is published; the demo is a Spring Boot application and is not.
-project(':rotating-secrets') {
-    apply plugin: 'maven-publish'
+// The libraries are published; the demo is a Spring Boot application and is not.
+def libraryDescriptions = [
+    'rotating-secrets': 'Zero-downtime Kubernetes credential rotation for connection pools',
+    'rotating-secrets-hikari': 'HikariCP adapter for RotatingSecrets credential rotation',
+    'rotating-secrets-ucp': 'Oracle UCP adapter for RotatingSecrets credential rotation',
+]
 
-    // The dependency-management plugin adds the imported BOMs to the POM through a withXml action
-    // that holds Project references, so POM generation cannot use the configuration cache.
-    tasks.withType(GenerateMavenPom).configureEach {
-        notCompatibleWithConfigurationCache('io.spring.dependency-management POM customization')
-    }
+libraryDescriptions.each { String artifact, String description ->
+    project(":${artifact}") {
+        apply plugin: 'maven-publish'
 
-    publishing {
-        repositories {
-            maven {
-                name = 'GitHubPackages'
-                url = uri("https://maven.pkg.github.com/${System.env.GITHUB_REPOSITORY ?: 'bhanafee/RotatingSecrets'}")
-                credentials {
-                    username = System.env.USERNAME ?: System.env.GITHUB_ACTOR
-                    password = System.env.TOKEN ?: System.env.GITHUB_TOKEN
+        // The dependency-management plugin adds the imported BOMs to the POM through a withXml action
+        // that holds Project references, so POM generation cannot use the configuration cache.
+        tasks.withType(GenerateMavenPom).configureEach {
+            notCompatibleWithConfigurationCache('io.spring.dependency-management POM customization')
+        }
+
+        publishing {
+            repositories {
+                maven {
+                    name = 'GitHubPackages'
+                    url = uri("https://maven.pkg.github.com/${System.env.GITHUB_REPOSITORY ?: 'bhanafee/RotatingSecrets'}")
+                    credentials {
+                        username = System.env.USERNAME ?: System.env.GITHUB_ACTOR
+                        password = System.env.TOKEN ?: System.env.GITHUB_TOKEN
+                    }
                 }
             }
-        }
-        publications {
-            mavenJava(MavenPublication) {
-                from components.java
-                artifactId = 'rotating-secrets'
-                pom {
-                    name = 'RotatingSecrets'
-                    description = 'Zero-downtime Kubernetes credential rotation for connection pools'
-                    url = 'https://github.com/bhanafee/RotatingSecrets'
-                    licenses {
-                        license {
-                            name = 'Apache License, Version 2.0'
-                            url = 'https://www.apache.org/licenses/LICENSE-2.0'
-                        }
-                    }
-                    scm {
+            publications {
+                mavenJava(MavenPublication) {
+                    from components.java
+                    artifactId = artifact
+                    pom {
+                        name = artifact
+                        description = description
                         url = 'https://github.com/bhanafee/RotatingSecrets'
-                        connection = 'scm:git:git://github.com/bhanafee/RotatingSecrets.git'
-                        developerConnection = 'scm:git:ssh://github.com/bhanafee/RotatingSecrets.git'
+                        licenses {
+                            license {
+                                name = 'Apache License, Version 2.0'
+                                url = 'https://www.apache.org/licenses/LICENSE-2.0'
+                            }
+                        }
+                        scm {
+                            url = 'https://github.com/bhanafee/RotatingSecrets'
+                            connection = 'scm:git:git://github.com/bhanafee/RotatingSecrets.git'
+                            developerConnection = 'scm:git:ssh://github.com/bhanafee/RotatingSecrets.git'
+                        }
                     }
                 }
             }

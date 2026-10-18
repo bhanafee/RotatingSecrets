@@ -1,0 +1,13 @@
+dependencies {
+    api project(':rotating-secrets')
+    api libs.hikaricp
+    api libs.spring.context
+}
+
+testing {
+    suites.test {
+        dependencies {
+            runtimeOnly libs.h2
+        }
+    }
+}

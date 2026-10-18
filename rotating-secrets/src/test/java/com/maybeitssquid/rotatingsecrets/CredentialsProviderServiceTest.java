@@ -46,7 +46,7 @@ class CredentialsProviderServiceTest {
   void refreshCredentials_updatesWhenFilesChange() throws IOException {
     // Setup mock updatable
     UpdatableCredential<String> mockUpdatable = mock(UpdatableCredential.class);
-    service.setHikariUpdatable(mockUpdatable);
+    service.register(mockUpdatable);
 
     // First refresh - should detect initial credentials
     service.refreshCredentials();
@@ -66,8 +66,8 @@ class CredentialsProviderServiceTest {
     UpdatableCredential<String> updatable1 = mock(UpdatableCredential.class);
     UpdatableCredential<String> updatable2 = mock(UpdatableCredential.class);
 
-    service.setHikariUpdatable(updatable1);
-    service.setUcpUpdatable(updatable2);
+    service.register(updatable1);
+    service.register(updatable2);
 
     service.refreshCredentials();
 
@@ -78,7 +78,7 @@ class CredentialsProviderServiceTest {
   @Test
   void refreshCredentials_skipsWhenFilesNotExist() throws IOException {
     UpdatableCredential<String> mockUpdatable = mock(UpdatableCredential.class);
-    service.setHikariUpdatable(mockUpdatable);
+    service.register(mockUpdatable);
 
     // Delete credential files
     Files.delete(usernamePath);
@@ -92,7 +92,7 @@ class CredentialsProviderServiceTest {
   @Test
   void refreshCredentials_skipsWhenCredentialsUnchanged() throws IOException {
     UpdatableCredential<String> mockUpdatable = mock(UpdatableCredential.class);
-    service.setHikariUpdatable(mockUpdatable);
+    service.register(mockUpdatable);
 
     // First refresh
     service.refreshCredentials();
@@ -112,7 +112,7 @@ class CredentialsProviderServiceTest {
     AtomicInteger updateCount = new AtomicInteger(0);
     UpdatableCredential<String> countingUpdatable =
         (username, credential) -> updateCount.incrementAndGet();
-    service.setHikariUpdatable(countingUpdatable);
+    service.register(countingUpdatable);
 
     int threadCount = 10;
     ExecutorService executor = Executors.newFixedThreadPool(threadCount);
@@ -166,7 +166,7 @@ class CredentialsProviderServiceTest {
   @Test
   void refreshCredentials_logsWarningWhenFilesDisappear() throws IOException {
     UpdatableCredential<String> mockUpdatable = mock(UpdatableCredential.class);
-    service.setHikariUpdatable(mockUpdatable);
+    service.register(mockUpdatable);
 
     // First refresh with files present
     service.refreshCredentials();
@@ -186,7 +186,7 @@ class CredentialsProviderServiceTest {
   @Test
   void refreshCredentials_resumesAfterFilesReappear() throws IOException {
     UpdatableCredential<String> mockUpdatable = mock(UpdatableCredential.class);
-    service.setHikariUpdatable(mockUpdatable);
+    service.register(mockUpdatable);
 
     service.refreshCredentials();
     verify(mockUpdatable).setCredential("testuser", "testpass");
@@ -219,7 +219,7 @@ class CredentialsProviderServiceTest {
   @Test
   void refreshCredentials_trimsWhitespaceFromSecrets() throws IOException {
     UpdatableCredential<String> mockUpdatable = mock(UpdatableCredential.class);
-    service.setHikariUpdatable(mockUpdatable);
+    service.register(mockUpdatable);
 
     Files.writeString(usernamePath, "  spaced-user\n");
     Files.writeString(passwordPath, "\tspaced-pass  \n");
@@ -250,7 +250,7 @@ class CredentialsProviderServiceTest {
     UpdatableCredential<String> mockUpdatable = mock(UpdatableCredential.class);
     // Short fallback interval so the watch loop re-checks quickly even without an OS event.
     service = new CredentialsProviderService(tempDir.toString(), 100);
-    service.setHikariUpdatable(mockUpdatable);
+    service.register(mockUpdatable);
 
     service.start();
     verify(mockUpdatable, timeout(2000)).setCredential("testuser", "testpass");

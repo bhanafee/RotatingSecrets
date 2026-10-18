@@ -1,7 +1,5 @@
 package com.maybeitssquid.rotatingsecrets;
 
-import jakarta.annotation.PostConstruct;
-import jakarta.annotation.PreDestroy;
 import java.io.IOException;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
@@ -16,10 +14,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
 
 /**
  * Service that reads database credentials from Kubernetes-mounted secret files and notifies
@@ -61,10 +55,7 @@ import org.springframework.stereotype.Service;
  * list of updatable components is safely managed.
  *
  * @see UpdatableCredential
- * @see com.maybeitssquid.rotatingsecrets.hikari.HikariCredentialsUpdater
- * @see com.maybeitssquid.rotatingsecrets.ucp.UcpCredentialsUpdater
  */
-@Service("credentialsProvider")
 public class CredentialsProviderService {
 
   private static final Logger log = LoggerFactory.getLogger(CredentialsProviderService.class);
@@ -97,9 +88,7 @@ public class CredentialsProviderService {
    * @param refreshIntervalMs fallback poll timeout in milliseconds; a credential re-check is forced
    *     after this interval even if no watch event fires; defaults to 30000
    */
-  public CredentialsProviderService(
-      @Value("${k8s.secrets.path:/var/run/secrets/database}") String secretsPath,
-      @Value("${k8s.secrets.refreshInterval:30000}") long refreshIntervalMs) {
+  public CredentialsProviderService(String secretsPath, long refreshIntervalMs) {
     Path basePath = Path.of(secretsPath);
     this.usernamePath = basePath.resolve("username");
     this.passwordPath = basePath.resolve("password");
@@ -115,7 +104,6 @@ public class CredentialsProviderService {
    * @throws IOException if the {@link WatchService} cannot be created or the directory cannot be
    *     registered
    */
-  @PostConstruct
   public void start() throws IOException {
     checkPermissions(usernamePath);
     checkPermissions(passwordPath);
@@ -133,7 +121,6 @@ public class CredentialsProviderService {
   }
 
   /** Stops the directory watch thread and closes the {@link WatchService}. */
-  @PreDestroy
   public void stop() {
     if (watchThread != null) {
       watchThread.interrupt();
@@ -193,7 +180,7 @@ public class CredentialsProviderService {
    * Reads the current credentials from the mounted secret files and notifies registered {@link
    * UpdatableCredential} components if they have changed.
    */
-  void refreshCredentials() {
+  public void refreshCredentials() {
     if (!Files.exists(usernamePath) || !Files.exists(passwordPath)) {
       if (!warnedFilesUnavailable) {
         log.warn("Credential files no longer available at {}", usernamePath.getParent());
@@ -217,24 +204,14 @@ public class CredentialsProviderService {
   }
 
   /**
-   * Registers the HikariCP credentials updater to receive credential change notifications.
+   * Registers a component to receive credential change notifications.
    *
-   * @param updatable the HikariCP credentials updater bean
-   */
-  @Autowired
-  @Qualifier("hikariUpdater")
-  public void setHikariUpdatable(UpdatableCredential<String> updatable) {
-    this.updatables.add(updatable);
-  }
-
-  /**
-   * Registers the Oracle UCP credentials updater to receive credential change notifications.
+   * <p>Register components before calling {@link #start()}, so that the first credential read
+   * reaches them.
    *
-   * @param updatable the Oracle UCP credentials updater bean
+   * @param updatable the component to notify when credentials change
    */
-  @Autowired
-  @Qualifier("ucpUpdater")
-  public void setUcpUpdatable(UpdatableCredential<String> updatable) {
+  public void register(UpdatableCredential<String> updatable) {
     this.updatables.add(updatable);
   }
 
