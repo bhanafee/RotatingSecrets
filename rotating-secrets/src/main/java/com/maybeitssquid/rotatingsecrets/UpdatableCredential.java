@@ -29,6 +29,10 @@ public interface UpdatableCredential<T> {
    * pool refresh operations. This method may be called from a scheduled background thread, so
    * implementations must be thread-safe.
    *
+   * <p>Implementations must not log the {@code credential} argument, directly or through an
+   * exception message or a {@code toString} of their own state. The credential is a live secret,
+   * and anything written to a log is copied to every system that stores that log.
+   *
    * @param username the new username to use for connections
    * @param credential the new credential (password) to use for connections
    */
