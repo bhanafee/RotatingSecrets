@@ -35,7 +35,7 @@ Build uses Java 25 toolchain, compiles to Java 17 bytecode (`release = "17"`). C
 - **`CredentialsProviderService`** — watches secret files and triggers credential updates (`:rotating-secrets` module; plain Java, no Spring)
 - **`HikariCredentialsUpdater`** — implements HikariCP credential rotation
 - **`UcpCredentialsUpdater`** — implements Oracle UCP credential rotation
-- **`DemoRotatingSecretsConfig`** — creates the provider, registers both pool updaters, and starts it (`:demo` module)
+- **`RotatingSecretsConfig`** — Spring configuration that creates and starts the provider and registers every updater bean (`:rotating-secrets-spring` module)
 
 ## Versioning and Releases
 
@@ -73,13 +73,14 @@ git push origin :v1.0.0        # Delete from remote
 - **`rotating-secrets/`** — core library: `CredentialsProviderService`, `UpdatableCredential` and the exception. Depends only on SLF4J. Has a `module-info.java` that exports `com.maybeitssquid.rotatingsecrets`.
 - **`rotating-secrets-hikari/`** — HikariCP adapter. Depends on `rotating-secrets`, HikariCP and `spring-context`. Its `module-info.java` opens the `hikari` package to Spring for the `@Configuration` classes.
 - **`rotating-secrets-ucp/`** — Oracle UCP adapter. Depends on `rotating-secrets`, UCP and `spring-context`. Same module setup as the Hikari adapter.
-- **`demo/`** — Spring Boot application that depends on both adapters and exercises both connection pools. It is not modular.
+- **`rotating-secrets-spring/`** — Spring configuration. Depends on `rotating-secrets` and `spring-context`. Its `module-info.java` opens `com.maybeitssquid.rotatingsecrets.spring` to Spring. `RotatingSecretsConfig` creates the provider and registers every `UpdatableCredential<String>` bean in the context.
+- **`demo/`** — Spring Boot application that depends on both adapters and the Spring module, and exercises both connection pools. It is not modular.
 
 ### Credential rotation flow
 
 `CredentialsProviderService` runs a `WatchService` thread on two files (`username`, `password`) in a Kubernetes-mounted directory (default `/var/run/secrets/database`). It re-reads the files on any directory event, and also when the `refresh-interval` fallback timeout elapses with no event. On first read or any change it calls `setCredential(username, password)` on every registered `UpdatableCredential<String>` bean.
 
-The core has no Spring dependency, so the application creates `CredentialsProviderService`, calls `register(...)` for each pool updater, then calls `start()`. The adapters expose the updaters as named beans (`hikariUpdater`, `ucpUpdater`). `DemoRotatingSecretsConfig` does this wiring for the demo:
+The core has no Spring dependency. Without Spring, the application creates `CredentialsProviderService`, calls `register(...)` for each pool updater, then calls `start()`. With Spring, `rotating-secrets-spring` does this for every `UpdatableCredential<String>` bean in the context, so the application needs no bean names. The adapters expose their updaters as beans (`hikariUpdater`, `ucpUpdater`) for the Spring module to discover:
 
 - **`HikariCredentialsUpdater`** — implements both `UpdatableCredential<String>` and HikariCP's `HikariCredentialsProvider`. On update it swaps the immutable `Credentials` object and calls `softEvictConnections()`. There is a deliberate circular dependency: `HikariDataSourceConfig` must set the `HikariCredentialsProvider` on the config *before* creating the `HikariDataSource`, then inject the `HikariDataSource` back into the updater for eviction support.
 - **`UcpCredentialsUpdater`** — calls `setUser()`/`setPassword()` and `refreshConnectionPool()` on the Oracle UCP `PoolDataSource`.
@@ -89,7 +90,7 @@ The core has no Spring dependency, so the application creates `CredentialsProvid
 | Property | Default | Purpose |
 |---|---|---|
 | `k8s.secrets.path` | `/var/run/secrets/database` | Directory with `username` and `password` files |
-| `k8s.secrets.refresh-interval` | `30s` | Fallback re-check interval (a `Duration`) when no file event arrives |
+| `k8s.secrets.refresh-interval` | `30s` | Fallback re-check interval when no file event arrives. Accepts `30s`, `2m`, `1h`, `1d`, ISO-8601 (`PT30S`), or bare milliseconds |
 | `spring.datasource.*` | — | HikariCP datasource (primary) |
 | `spring.datasource.ucp.*` | — | Oracle UCP datasource |
 

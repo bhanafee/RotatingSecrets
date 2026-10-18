@@ -77,27 +77,30 @@ jobs:
 
       - name: Copy Javadoc
         run: |
-          mkdir -p _site/javadoc/rotating-secrets _site/javadoc/rotating-secrets-hikari _site/javadoc/rotating-secrets-ucp _site/javadoc/demo
+          mkdir -p _site/javadoc/rotating-secrets _site/javadoc/rotating-secrets-hikari _site/javadoc/rotating-secrets-ucp _site/javadoc/rotating-secrets-spring _site/javadoc/demo
           cp -r rotating-secrets/build/docs/javadoc/. _site/javadoc/rotating-secrets/
           cp -r rotating-secrets-hikari/build/docs/javadoc/. _site/javadoc/rotating-secrets-hikari/
           cp -r rotating-secrets-ucp/build/docs/javadoc/. _site/javadoc/rotating-secrets-ucp/
+          cp -r rotating-secrets-spring/build/docs/javadoc/. _site/javadoc/rotating-secrets-spring/
           cp -r demo/build/docs/javadoc/. _site/javadoc/demo/
           cp LICENSE _site/
 
       - name: Copy test results
         run: |
-          mkdir -p _site/tests/rotating-secrets _site/tests/rotating-secrets-hikari _site/tests/rotating-secrets-ucp _site/tests/demo
+          mkdir -p _site/tests/rotating-secrets _site/tests/rotating-secrets-hikari _site/tests/rotating-secrets-ucp _site/tests/rotating-secrets-spring _site/tests/demo
           cp -r rotating-secrets/build/reports/tests/test/. _site/tests/rotating-secrets/
           cp -r rotating-secrets-hikari/build/reports/tests/test/. _site/tests/rotating-secrets-hikari/
           cp -r rotating-secrets-ucp/build/reports/tests/test/. _site/tests/rotating-secrets-ucp/
+          cp -r rotating-secrets-spring/build/reports/tests/test/. _site/tests/rotating-secrets-spring/
           cp -r demo/build/reports/tests/test/. _site/tests/demo/
 
       - name: Copy coverage report
         run: |
-          mkdir -p _site/coverage/rotating-secrets _site/coverage/rotating-secrets-hikari _site/coverage/rotating-secrets-ucp _site/coverage/demo
+          mkdir -p _site/coverage/rotating-secrets _site/coverage/rotating-secrets-hikari _site/coverage/rotating-secrets-ucp _site/coverage/rotating-secrets-spring _site/coverage/demo
           cp -r rotating-secrets/build/reports/jacoco/test/html/. _site/coverage/rotating-secrets/
           cp -r rotating-secrets-hikari/build/reports/jacoco/test/html/. _site/coverage/rotating-secrets-hikari/
           cp -r rotating-secrets-ucp/build/reports/jacoco/test/html/. _site/coverage/rotating-secrets-ucp/
+          cp -r rotating-secrets-spring/build/reports/jacoco/test/html/. _site/coverage/rotating-secrets-spring/
           cp -r demo/build/reports/jacoco/test/html/. _site/coverage/demo/
 
       - name: Upload Pages artifact

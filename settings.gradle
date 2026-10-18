@@ -1,6 +1,6 @@
 rootProject.name = 'RotatingSecrets'
 
-include ':rotating-secrets', ':rotating-secrets-hikari', ':rotating-secrets-ucp', ':demo'
+include ':rotating-secrets', ':rotating-secrets-hikari', ':rotating-secrets-ucp', ':rotating-secrets-spring', ':demo'
 
 // shared:begin patch-constraints
 gradle.beforeProject { proj ->
