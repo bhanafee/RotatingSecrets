@@ -4,14 +4,14 @@ This file documents key information about the project architecture, build comman
 
 ## Project overview
 
-RotatingSecrets is a Java library (`rotating-secrets` module) and demo app (`demo` module) for zero-downtime database credential rotation in Kubernetes. When a secrets manager (Vault, OpenBao, ESO) rotates database credentials by updating mounted secret files, the library detects the change and updates connection pools without dropping connections.
+RotatingSecrets is a Java library (`rotating-secrets` core, plus `rotating-secrets-hikari` and `rotating-secrets-ucp` adapters) and demo app (`demo` module) for zero-downtime database credential rotation in Kubernetes. When a secrets manager (Vault, OpenBao, ESO) rotates database credentials by updating mounted secret files, the library detects the change and updates connection pools without dropping connections.
 
 ## Commands
 
 **Build and test:**
 ```bash
 ./gradlew build              # compile, test, spotless check
-./gradlew test               # run all tests (both modules)
+./gradlew test               # run all tests (all modules)
 ./gradlew :rotating-secrets:test  # test only rotating-secrets module
 ./gradlew :demo:test         # test only demo module
 ./gradlew test --tests "*ProviderTest"        # run tests by class name
@@ -32,10 +32,10 @@ Build uses Java 25 toolchain, compiles to Java 17 bytecode (`release = "17"`). C
 
 ## Key Entry Points
 
-- **`CredentialsProviderService`** — watches secret files and triggers credential updates (`:rotating-secrets` module)
+- **`CredentialsProviderService`** — watches secret files and triggers credential updates (`:rotating-secrets` module; plain Java, no Spring)
 - **`HikariCredentialsUpdater`** — implements HikariCP credential rotation
 - **`UcpCredentialsUpdater`** — implements Oracle UCP credential rotation
-- **`RotatingSecretsApplication`** — Spring Boot demo app wiring both pool implementations (`:demo` module)
+- **`DemoRotatingSecretsConfig`** — creates the provider, registers both pool updaters, and starts it (`:demo` module)
 
 ## Versioning and Releases
 
@@ -70,14 +70,16 @@ git push origin :v1.0.0        # Delete from remote
 
 ### Module structure
 
-- **`rotating-secrets/`** — reusable library; no Spring Boot plugin, produces a plain JAR
-- **`demo/`** — Spring Boot application that depends on `rotating-secrets` and exercises both connection pools
+- **`rotating-secrets/`** — core library: `CredentialsProviderService`, `UpdatableCredential` and the exception. Depends only on SLF4J. Has a `module-info.java` that exports `com.maybeitssquid.rotatingsecrets`.
+- **`rotating-secrets-hikari/`** — HikariCP adapter. Depends on `rotating-secrets`, HikariCP and `spring-context`. Its `module-info.java` opens the `hikari` package to Spring for the `@Configuration` classes.
+- **`rotating-secrets-ucp/`** — Oracle UCP adapter. Depends on `rotating-secrets`, UCP and `spring-context`. Same module setup as the Hikari adapter.
+- **`demo/`** — Spring Boot application that depends on both adapters and exercises both connection pools. It is not modular.
 
 ### Credential rotation flow
 
 `CredentialsProviderService` runs a `WatchService` thread on two files (`username`, `password`) in a Kubernetes-mounted directory (default `/var/run/secrets/database`). It re-reads the files on any directory event, and also when the `refreshInterval` fallback timeout elapses with no event. On first read or any change it calls `setCredential(username, password)` on every registered `UpdatableCredential<String>` bean.
 
-Two implementations are wired as named beans (`hikariUpdater`, `ucpUpdater`) and auto-registered via `@Autowired @Qualifier` setters on `CredentialsProviderService`:
+The core has no Spring dependency, so the application creates `CredentialsProviderService`, calls `register(...)` for each pool updater, then calls `start()`. The adapters expose the updaters as named beans (`hikariUpdater`, `ucpUpdater`). `DemoRotatingSecretsConfig` does this wiring for the demo:
 
 - **`HikariCredentialsUpdater`** — implements both `UpdatableCredential<String>` and HikariCP's `HikariCredentialsProvider`. On update it swaps the immutable `Credentials` object and calls `softEvictConnections()`. There is a deliberate circular dependency: `HikariDataSourceConfig` must set the `HikariCredentialsProvider` on the config *before* creating the `HikariDataSource`, then inject the `HikariDataSource` back into the updater for eviction support.
 - **`UcpCredentialsUpdater`** — calls `setUser()`/`setPassword()` and `refreshConnectionPool()` on the Oracle UCP `PoolDataSource`.

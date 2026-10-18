@@ -11,9 +11,9 @@ package com.maybeitssquid.rotatingsecrets;
  * updating credentials and refreshing connections. For example:
  *
  * <ul>
- *   <li>{@link com.maybeitssquid.rotatingsecrets.hikari.HikariCredentialsUpdater} - Updates
- *       HikariCP credentials and soft-evicts connections
- *   <li>{@link com.maybeitssquid.rotatingsecrets.ucp.UcpCredentialsUpdater} - Updates Oracle UCP
+ *   <li>{@code HikariCredentialsUpdater} in {@code rotating-secrets-hikari} - Updates HikariCP
+ *       credentials and soft-evicts connections
+ *   <li>{@code UcpCredentialsUpdater} in {@code rotating-secrets-ucp} - Updates Oracle UCP
  *       credentials and refreshes the pool
  * </ul>
  *
