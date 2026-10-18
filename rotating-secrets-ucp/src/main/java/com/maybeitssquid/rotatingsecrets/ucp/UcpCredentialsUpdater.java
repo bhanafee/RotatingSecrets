@@ -3,6 +3,7 @@ package com.maybeitssquid.rotatingsecrets.ucp;
 import com.maybeitssquid.rotatingsecrets.CredentialRotationException;
 import com.maybeitssquid.rotatingsecrets.UpdatableCredential;
 import java.sql.SQLException;
+import java.util.Arrays;
 import oracle.ucp.UniversalConnectionPoolException;
 import oracle.ucp.admin.UniversalConnectionPoolManager;
 import oracle.ucp.admin.UniversalConnectionPoolManagerImpl;
@@ -21,8 +22,10 @@ import oracle.ucp.jdbc.PoolDataSource;
  * <ol>
  *   <li>Acquire a lock on the pool to ensure atomic credential updates
  *   <li>Update the username and password on the {@link PoolDataSource}
- *   <li>Call {@link UniversalConnectionPoolManager#refreshConnectionPool(String)} to gracefully
- *       replace connections with ones using the new credentials
+ *   <li>If the pool is registered with the manager, call {@link
+ *       UniversalConnectionPoolManager#refreshConnectionPool(String)} to gracefully replace
+ *       connections with ones using the new credentials. A pool that has not been created yet
+ *       already uses the new credentials when it is created, so there is nothing to refresh
  * </ol>
  *
  * <h2>Thread Safety</h2>
@@ -40,21 +43,37 @@ public class UcpCredentialsUpdater implements UpdatableCredential<String> {
   /** The Oracle UCP pool data source to manage credentials for. */
   private final PoolDataSource poolDataSource;
 
+  /** Supplies the UCP pool manager. Replaced in tests. */
+  private final ManagerSource managers;
+
   /**
    * Creates a new credentials updater for the given Oracle UCP pool.
    *
    * @param poolDataSource the Oracle UCP PoolDataSource to manage
    */
   public UcpCredentialsUpdater(final PoolDataSource poolDataSource) {
-    this.poolDataSource = poolDataSource;
+    this(poolDataSource, UniversalConnectionPoolManagerImpl::getUniversalConnectionPoolManager);
   }
 
   /**
-   * Updates the credentials used by the Oracle UCP pool and refreshes connections.
+   * Creates an updater that gets the pool manager from the given source.
    *
-   * <p>This method atomically updates the username and password on the pool, then triggers a pool
-   * refresh. The refresh operation gracefully replaces existing connections with new ones using the
-   * updated credentials. Active connections continue to work until they are returned to the pool.
+   * @param poolDataSource the Oracle UCP PoolDataSource to manage
+   * @param managers supplies the UCP pool manager
+   */
+  UcpCredentialsUpdater(final PoolDataSource poolDataSource, final ManagerSource managers) {
+    this.poolDataSource = poolDataSource;
+    this.managers = managers;
+  }
+
+  /**
+   * Updates the credentials used by the Oracle UCP pool and refreshes connections if the pool
+   * exists.
+   *
+   * <p>This method atomically updates the username and password on the pool, then refreshes the
+   * pool if it is registered with the manager. The refresh operation gracefully replaces existing
+   * connections with new ones using the updated credentials. Active connections continue to work
+   * until they are returned to the pool.
    *
    * @param username the new database username
    * @param credential the new database password
@@ -68,14 +87,30 @@ public class UcpCredentialsUpdater implements UpdatableCredential<String> {
         this.poolDataSource.setUser(username);
         this.poolDataSource.setPassword(credential);
       }
-      final UniversalConnectionPoolManager mgr =
-          UniversalConnectionPoolManagerImpl.getUniversalConnectionPoolManager();
-      mgr.refreshConnectionPool(poolName);
+      final UniversalConnectionPoolManager mgr = managers.get();
+      // A pool is registered with the manager only once it is created. Until then the new
+      // credentials
+      // are already on the PoolDataSource, so there is nothing to refresh.
+      if (Arrays.asList(mgr.getConnectionPoolNames()).contains(poolName)) {
+        mgr.refreshConnectionPool(poolName);
+      }
     } catch (final SQLException e) {
       throw new CredentialRotationException(
           "Failed to update credentials in poolDataSource " + poolName, e);
     } catch (final UniversalConnectionPoolException e) {
       throw new CredentialRotationException("Failed to refresh poolDataSource " + poolName, e);
     }
+  }
+
+  /** Source of the UCP pool manager, so tests can substitute a mock. */
+  @FunctionalInterface
+  interface ManagerSource {
+    /**
+     * Returns the UCP pool manager.
+     *
+     * @return the pool manager
+     * @throws UniversalConnectionPoolException if the manager cannot be obtained
+     */
+    UniversalConnectionPoolManager get() throws UniversalConnectionPoolException;
   }
 }
