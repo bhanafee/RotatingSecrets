@@ -1,0 +1,4 @@
+dependencies {
+    api project(':rotating-secrets')
+    api libs.spring.context
+}

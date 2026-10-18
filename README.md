@@ -1,6 +1,6 @@
 # RotatingSecrets
 
-A library and demo for zero-downtime database credential rotation in Kubernetes environments. The `rotating-secrets` module is a plain-Java core that reads fresh credentials from Kubernetes-mounted secret files and notifies registered pool updaters when passwords are rotated. The `rotating-secrets-hikari` and `rotating-secrets-ucp` modules adapt HikariCP and Oracle Universal Connection Pool (UCP) to it, and each depends only on its pool library plus `spring-context`. The `demo` module is a Spring Boot application that exercises the library.
+A library and demo for zero-downtime database credential rotation in Kubernetes environments. The `rotating-secrets` module is a plain-Java core that reads fresh credentials from Kubernetes-mounted secret files and notifies registered pool updaters when passwords are rotated. The `rotating-secrets-hikari` and `rotating-secrets-ucp` modules adapt HikariCP and Oracle Universal Connection Pool (UCP) to it, and `rotating-secrets-spring` creates and registers the provider as a Spring bean. Each Spring-facing module depends only on its own library plus `spring-context`. The `demo` module is a Spring Boot application that exercises the library.
 
 ## How It Works
 
@@ -238,6 +238,12 @@ rotating-secrets-ucp/                      # Oracle UCP adapter (UCP, spring-con
         ├── UcpCredentialsUpdater.java         # Oracle UCP credential rotation handler
         └── UcpDataSourceConfig.java           # Oracle UCP configuration
 
+rotating-secrets-spring/                   # Spring configuration (spring-context)
+└── src/main/java/
+    ├── module-info.java
+    └── com/maybeitssquid/rotatingsecrets/spring/
+        └── RotatingSecretsConfig.java         # Creates and starts the provider; registers every updater bean
+
 demo/                                      # Spring Boot demo application
 └── src/main/
     ├── java/com/maybeitssquid/rotatingsecrets/
@@ -376,14 +382,17 @@ spec:
 - [Javadoc: rotating-secrets](https://bhanafee.github.io/RotatingSecrets/javadoc/rotating-secrets/)
 - [Javadoc: rotating-secrets-hikari](https://bhanafee.github.io/RotatingSecrets/javadoc/rotating-secrets-hikari/)
 - [Javadoc: rotating-secrets-ucp](https://bhanafee.github.io/RotatingSecrets/javadoc/rotating-secrets-ucp/)
+- [Javadoc: rotating-secrets-spring](https://bhanafee.github.io/RotatingSecrets/javadoc/rotating-secrets-spring/)
 - [Javadoc: demo](https://bhanafee.github.io/RotatingSecrets/javadoc/demo/)
 - [Test Results: rotating-secrets](https://bhanafee.github.io/RotatingSecrets/tests/rotating-secrets/)
 - [Test Results: rotating-secrets-hikari](https://bhanafee.github.io/RotatingSecrets/tests/rotating-secrets-hikari/)
 - [Test Results: rotating-secrets-ucp](https://bhanafee.github.io/RotatingSecrets/tests/rotating-secrets-ucp/)
+- [Test Results: rotating-secrets-spring](https://bhanafee.github.io/RotatingSecrets/tests/rotating-secrets-spring/)
 - [Test Results: demo](https://bhanafee.github.io/RotatingSecrets/tests/demo/)
 - [Coverage Report: rotating-secrets](https://bhanafee.github.io/RotatingSecrets/coverage/rotating-secrets/)
 - [Coverage Report: rotating-secrets-hikari](https://bhanafee.github.io/RotatingSecrets/coverage/rotating-secrets-hikari/)
 - [Coverage Report: rotating-secrets-ucp](https://bhanafee.github.io/RotatingSecrets/coverage/rotating-secrets-ucp/)
+- [Coverage Report: rotating-secrets-spring](https://bhanafee.github.io/RotatingSecrets/coverage/rotating-secrets-spring/)
 - [Coverage Report: demo](https://bhanafee.github.io/RotatingSecrets/coverage/demo/)
 - [Code of Conduct](https://bhanafee.github.io/RotatingSecrets/CODE_OF_CONDUCT.html)
 - [Agents guidance](https://bhanafee.github.io/RotatingSecrets/AGENTS.html)
