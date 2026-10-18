@@ -130,7 +130,7 @@ classDiagram
 - **Fail-Fast**: The application throws RuntimeException if secrets cannot be read
 - **RBAC**: Ensure the pod has read permissions on mounted secret volumes
 - **FAN Events**: For Oracle RAC, enable FAN in UCP configuration
-- **Fallback Interval**: `k8s.secrets.refreshInterval` (default 30000ms) is a safety-net timeout — credentials are re-checked after this interval even if no watch event fires
+- **Fallback Interval**: `k8s.secrets.refresh-interval` (default `30s`) is a safety-net timeout — credentials are re-checked after this interval even if no watch event fires
 
 ## Architecture
 
@@ -261,7 +261,7 @@ spring.application.name=RotatingSecrets
 
 # Kubernetes secrets path (mounted by Vault Agent or CSI driver)
 k8s.secrets.path=/var/run/secrets/database
-k8s.secrets.refreshInterval=30000  # fallback timeout (ms) if no watch event fires
+k8s.secrets.refresh-interval=30s  # fallback timeout if no watch event fires
 
 # Common datasource settings
 spring.datasource.url=jdbc:oracle:thin:@//host:1521/service

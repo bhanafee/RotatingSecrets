@@ -77,7 +77,7 @@ git push origin :v1.0.0        # Delete from remote
 
 ### Credential rotation flow
 
-`CredentialsProviderService` runs a `WatchService` thread on two files (`username`, `password`) in a Kubernetes-mounted directory (default `/var/run/secrets/database`). It re-reads the files on any directory event, and also when the `refreshInterval` fallback timeout elapses with no event. On first read or any change it calls `setCredential(username, password)` on every registered `UpdatableCredential<String>` bean.
+`CredentialsProviderService` runs a `WatchService` thread on two files (`username`, `password`) in a Kubernetes-mounted directory (default `/var/run/secrets/database`). It re-reads the files on any directory event, and also when the `refresh-interval` fallback timeout elapses with no event. On first read or any change it calls `setCredential(username, password)` on every registered `UpdatableCredential<String>` bean.
 
 The core has no Spring dependency, so the application creates `CredentialsProviderService`, calls `register(...)` for each pool updater, then calls `start()`. The adapters expose the updaters as named beans (`hikariUpdater`, `ucpUpdater`). `DemoRotatingSecretsConfig` does this wiring for the demo:
 
@@ -89,7 +89,7 @@ The core has no Spring dependency, so the application creates `CredentialsProvid
 | Property | Default | Purpose |
 |---|---|---|
 | `k8s.secrets.path` | `/var/run/secrets/database` | Directory with `username` and `password` files |
-| `k8s.secrets.refreshInterval` | `30000` | Fallback re-check interval (ms) when no file event arrives |
+| `k8s.secrets.refresh-interval` | `30s` | Fallback re-check interval (a `Duration`) when no file event arrives |
 | `spring.datasource.*` | — | HikariCP datasource (primary) |
 | `spring.datasource.ucp.*` | — | Oracle UCP datasource |
 
@@ -119,7 +119,7 @@ echo "dbpassword" > /tmp/secrets/database/password
 ./gradlew :demo:bootRun --args='--k8s.secrets.path=/tmp/secrets/database'
 ```
 
-Update the secret files to trigger rotation. The service reacts to file events right away; `refreshInterval` (30 seconds by default) is only the fallback re-check.
+Update the secret files to trigger rotation. The service reacts to file events right away; `refresh-interval` (30 seconds by default) is only the fallback re-check.
 
 ## Dependency constraints
 
