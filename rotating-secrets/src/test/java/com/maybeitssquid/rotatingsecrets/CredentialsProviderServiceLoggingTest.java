@@ -72,13 +72,12 @@ class CredentialsProviderServiceLoggingTest {
   @Test
   void watchLoop_doesNotLogPasswordWhenUpdaterFails() throws Exception {
     AtomicBoolean fail = new AtomicBoolean(false);
-    service.register(
-        (username, password) -> {
-          if (fail.get()) {
-            // Generic message, the way a pool adapter wraps its own failures.
-            throw new IllegalStateException("pool refresh failed");
-          }
-        });
+    service.register((username, password) -> {
+      if (fail.get()) {
+        // Generic message, the way a pool adapter wraps its own failures.
+        throw new IllegalStateException("pool refresh failed");
+      }
+    });
     service.start();
 
     fail.set(true);

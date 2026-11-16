@@ -32,12 +32,11 @@ class HikariOnlyStartupTest {
             "spring.datasource.driver-class-name=org.h2.Driver",
             "spring.datasource.username=sa",
             "spring.datasource.password=initial")
-        .run(
-            context -> {
-              assertNull(context.getStartupFailure());
-              HikariCredentialsUpdater updater = context.getBean(HikariCredentialsUpdater.class);
-              // The start-up read from the secret files reached the Hikari updater.
-              assertEquals("rotated", updater.getCredentials().getPassword());
-            });
+        .run(context -> {
+          assertNull(context.getStartupFailure());
+          HikariCredentialsUpdater updater = context.getBean(HikariCredentialsUpdater.class);
+          // The start-up read from the secret files reached the Hikari updater.
+          assertEquals("rotated", updater.getCredentials().getPassword());
+        });
   }
 }

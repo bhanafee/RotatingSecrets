@@ -108,32 +108,31 @@ class CredentialRotationIntegrationTest {
 
     // Submit query threads
     for (int t = 0; t < threadCount; t++) {
-      executor.submit(
-          () -> {
-            try {
-              startLatch.await();
-              for (int q = 0; q < queriesPerThread; q++) {
-                try (Connection conn = dataSource.getConnection();
-                    Statement stmt = conn.createStatement();
-                    ResultSet rs = stmt.executeQuery("SELECT " + q)) {
-                  if (rs.next()) {
-                    successCount.incrementAndGet();
-                  }
-                } catch (SQLException e) {
-                  errorCount.incrementAndGet();
-                }
-
-                // Trigger credential rotation periodically
-                if (q % 5 == 0) {
-                  credentialsUpdater.setCredential("sa", "");
-                }
+      executor.submit(() -> {
+        try {
+          startLatch.await();
+          for (int q = 0; q < queriesPerThread; q++) {
+            try (Connection conn = dataSource.getConnection();
+                Statement stmt = conn.createStatement();
+                ResultSet rs = stmt.executeQuery("SELECT " + q)) {
+              if (rs.next()) {
+                successCount.incrementAndGet();
               }
-            } catch (InterruptedException e) {
-              Thread.currentThread().interrupt();
-            } finally {
-              doneLatch.countDown();
+            } catch (SQLException e) {
+              errorCount.incrementAndGet();
             }
-          });
+
+            // Trigger credential rotation periodically
+            if (q % 5 == 0) {
+              credentialsUpdater.setCredential("sa", "");
+            }
+          }
+        } catch (InterruptedException e) {
+          Thread.currentThread().interrupt();
+        } finally {
+          doneLatch.countDown();
+        }
+      });
     }
 
     // Start all threads

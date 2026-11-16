@@ -38,11 +38,10 @@ class RotatingSecretsConfigTest {
     writeSecrets("sa", "pw");
 
     runner()
-        .run(
-            context -> {
-              assertNull(context.getStartupFailure());
-              assertNotNull(context.getBean(CredentialsProviderService.class));
-            });
+        .run(context -> {
+          assertNull(context.getStartupFailure());
+          assertNotNull(context.getBean(CredentialsProviderService.class));
+        });
   }
 
   @Test
@@ -52,14 +51,12 @@ class RotatingSecretsConfigTest {
     runner()
         .withBean("first", RecordingUpdater.class, RecordingUpdater::new)
         .withBean("second", RecordingUpdater.class, RecordingUpdater::new)
-        .run(
-            context -> {
-              assertNull(context.getStartupFailure());
-              for (RecordingUpdater updater :
-                  context.getBeansOfType(RecordingUpdater.class).values()) {
-                assertEquals(List.of("sa:pw"), updater.received());
-              }
-            });
+        .run(context -> {
+          assertNull(context.getStartupFailure());
+          for (RecordingUpdater updater : context.getBeansOfType(RecordingUpdater.class).values()) {
+            assertEquals(List.of("sa:pw"), updater.received());
+          }
+        });
   }
 
   @Test
