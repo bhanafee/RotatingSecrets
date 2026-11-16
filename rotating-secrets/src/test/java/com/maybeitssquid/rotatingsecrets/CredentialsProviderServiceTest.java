@@ -122,21 +122,20 @@ class CredentialsProviderServiceTest {
     // Submit concurrent refresh tasks
     for (int i = 0; i < threadCount; i++) {
       final int iteration = i;
-      executor.submit(
-          () -> {
-            try {
-              startLatch.await();
-              // Alternate between updating and keeping credentials
-              if (iteration % 2 == 0) {
-                Files.writeString(usernamePath, "user" + iteration);
-              }
-              service.refreshCredentials();
-            } catch (Exception e) {
-              fail("Exception during concurrent refresh: " + e.getMessage());
-            } finally {
-              doneLatch.countDown();
-            }
-          });
+      executor.submit(() -> {
+        try {
+          startLatch.await();
+          // Alternate between updating and keeping credentials
+          if (iteration % 2 == 0) {
+            Files.writeString(usernamePath, "user" + iteration);
+          }
+          service.refreshCredentials();
+        } catch (Exception e) {
+          fail("Exception during concurrent refresh: " + e.getMessage());
+        } finally {
+          doneLatch.countDown();
+        }
+      });
     }
 
     // Start all threads simultaneously

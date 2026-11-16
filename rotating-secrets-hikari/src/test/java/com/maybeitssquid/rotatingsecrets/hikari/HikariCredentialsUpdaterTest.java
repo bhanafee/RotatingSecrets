@@ -106,24 +106,22 @@ class HikariCredentialsUpdaterTest {
 
     int iterations = 1000;
     Thread writer =
-        new Thread(
-            () -> {
-              for (int i = 0; i < iterations; i++) {
-                updater.setCredential("user" + i, "pass" + i);
-              }
-            });
+        new Thread(() -> {
+          for (int i = 0; i < iterations; i++) {
+            updater.setCredential("user" + i, "pass" + i);
+          }
+        });
 
     Thread reader =
-        new Thread(
-            () -> {
-              for (int i = 0; i < iterations; i++) {
-                Credentials creds = updater.getCredentials();
-                // Should never get inconsistent credentials
-                assertNotNull(creds);
-                assertNotNull(creds.getUsername());
-                assertNotNull(creds.getPassword());
-              }
-            });
+        new Thread(() -> {
+          for (int i = 0; i < iterations; i++) {
+            Credentials creds = updater.getCredentials();
+            // Should never get inconsistent credentials
+            assertNotNull(creds);
+            assertNotNull(creds.getUsername());
+            assertNotNull(creds.getPassword());
+          }
+        });
 
     writer.start();
     reader.start();

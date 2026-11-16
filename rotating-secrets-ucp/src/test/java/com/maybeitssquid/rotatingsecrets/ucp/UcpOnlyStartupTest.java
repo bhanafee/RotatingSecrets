@@ -35,12 +35,11 @@ class UcpOnlyStartupTest {
             "spring.datasource.ucp.connection-factory-class-name=org.h2.Driver",
             "spring.datasource.ucp.user=sa",
             "spring.datasource.ucp.password=initial")
-        .run(
-            context -> {
-              assertNull(context.getStartupFailure());
-              // The pool is created and the updater ran without failing. The password update is
-              // covered by UcpCredentialsUpdaterTest, because Oracle's getPassword() is deprecated.
-              assertNotNull(context.getBean(PoolDataSource.class));
-            });
+        .run(context -> {
+          assertNull(context.getStartupFailure());
+          // The pool is created and the updater ran without failing. The password update is
+          // covered by UcpCredentialsUpdaterTest, because Oracle's getPassword() is deprecated.
+          assertNotNull(context.getBean(PoolDataSource.class));
+        });
   }
 }
